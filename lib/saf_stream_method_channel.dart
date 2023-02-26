@@ -1,0 +1,69 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+
+import 'saf_stream_platform_interface.dart';
+
+class SafWriteStreamInfo {
+  final String session;
+  final String uri;
+  SafWriteStreamInfo(this.session, this.uri);
+}
+
+/// An implementation of [SafStreamPlatform] that uses method channels.
+class MethodChannelSafStream extends SafStreamPlatform {
+  /// The method channel used to interact with the native platform.
+  @visibleForTesting
+  final methodChannel = const MethodChannel('saf_stream');
+
+  var _session = 0;
+
+  @override
+  Future<Stream<Uint8List>> readFile(String uri, {int? bufferSize}) async {
+    var session = _nextSession();
+    var channelName = await methodChannel.invokeMethod<String>('readFile', {
+      'fileUri': uri,
+      'session': session.toString(),
+      'bufferSize': bufferSize
+    });
+    if (channelName == null) {
+      throw Exception('Unexpected empty channel name from `readFile`');
+    }
+    var stream = EventChannel(channelName);
+    return stream.receiveBroadcastStream().map((e) => e as Uint8List);
+  }
+
+  @override
+  Future<SafWriteStreamInfo> startWriteStream(
+      String treeUri, String fileName, String mime) async {
+    var session = _nextSession().toString();
+    var uri = await methodChannel.invokeMethod<String>('startWriteStream', {
+      'treeUri': treeUri,
+      'session': session,
+      'fileName': fileName,
+      'mime': mime
+    });
+    if (uri == null) {
+      throw Exception('Unexpected empty Uri');
+    }
+    return SafWriteStreamInfo(session, uri);
+  }
+
+  @override
+  Future<void> writeChunk(String session, Uint8List data) async {
+    return await methodChannel.invokeMethod<void>('writeChunk', {
+      'session': session.toString(),
+      'data': data,
+    });
+  }
+
+  @override
+  Future<void> endWriteStream(String session) async {
+    return await methodChannel.invokeMethod<void>('endWriteStream', {
+      'session': session.toString(),
+    });
+  }
+
+  int _nextSession() {
+    return ++_session;
+  }
+}
