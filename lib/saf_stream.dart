@@ -5,12 +5,12 @@ import 'package:saf_stream/saf_stream_method_channel.dart';
 import 'saf_stream_platform_interface.dart';
 
 class SafStream {
-  Future<Stream<Uint8List>> readFile(String uri, {int? bufferSize}) async {
+  Future<Stream<Uint8List>> readFile(Uri uri, {int? bufferSize}) async {
     return SafStreamPlatform.instance.readFile(uri, bufferSize: bufferSize);
   }
 
   Future<SafWriteStreamInfo> startWriteStream(
-      String treeUri, String fileName, String mime) async {
+      Uri treeUri, String fileName, String mime) async {
     return SafStreamPlatform.instance.startWriteStream(treeUri, fileName, mime);
   }
 

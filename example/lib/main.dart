@@ -22,7 +22,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final _safStreamPlugin = SafStream();
   List<DocumentFile> _files = [];
-  String? _treeUri;
+  Uri? _treeUri;
   String _output = '';
   int _session = 0;
 
@@ -49,7 +49,7 @@ class _MyAppState extends State<MyApp> {
                       Text(f.isFile == true ? 'F' : 'D'),
                       const SizedBox(width: 10),
                       OutlinedButton(
-                          onPressed: () => _readFile(f.uri.toString()),
+                          onPressed: () => _readFile(f.uri),
                           child: const Text('Read stream'))
                     ],
                   ))),
@@ -69,7 +69,7 @@ class _MyAppState extends State<MyApp> {
       if (treeUri == null) {
         return;
       }
-      _treeUri = treeUri.toString();
+      _treeUri = Uri.directory(treeUri.toString());
       const List<DocumentFileColumn> columns = <DocumentFileColumn>[
         DocumentFileColumn.displayName,
         DocumentFileColumn.size,
@@ -89,7 +89,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _readFile(String uri) async {
+  Future<void> _readFile(Uri uri) async {
     try {
       var session = ++_session;
       await for (var bytes

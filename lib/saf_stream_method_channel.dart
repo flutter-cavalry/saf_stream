@@ -5,7 +5,7 @@ import 'saf_stream_platform_interface.dart';
 
 class SafWriteStreamInfo {
   final String session;
-  final String uri;
+  final Uri uri;
   SafWriteStreamInfo(this.session, this.uri);
 }
 
@@ -18,10 +18,10 @@ class MethodChannelSafStream extends SafStreamPlatform {
   var _session = 0;
 
   @override
-  Future<Stream<Uint8List>> readFile(String uri, {int? bufferSize}) async {
+  Future<Stream<Uint8List>> readFile(Uri uri, {int? bufferSize}) async {
     var session = _nextSession();
     var channelName = await methodChannel.invokeMethod<String>('readFile', {
-      'fileUri': uri,
+      'fileUri': uri.toString(),
       'session': session.toString(),
       'bufferSize': bufferSize
     });
@@ -34,10 +34,10 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafWriteStreamInfo> startWriteStream(
-      String treeUri, String fileName, String mime) async {
+      Uri treeUri, String fileName, String mime) async {
     var session = _nextSession().toString();
     var uri = await methodChannel.invokeMethod<String>('startWriteStream', {
-      'treeUri': treeUri,
+      'treeUri': treeUri.toString(),
       'session': session,
       'fileName': fileName,
       'mime': mime
@@ -45,7 +45,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
     if (uri == null) {
       throw Exception('Unexpected empty Uri');
     }
-    return SafWriteStreamInfo(session, uri);
+    return SafWriteStreamInfo(session, Uri.parse(uri));
   }
 
   @override

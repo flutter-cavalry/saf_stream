@@ -25,12 +25,12 @@ abstract class SafStreamPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<Stream<Uint8List>> readFile(String uri, {int? bufferSize}) async {
+  Future<Stream<Uint8List>> readFile(Uri uri, {int? bufferSize}) async {
     throw UnimplementedError('readFile() has not been implemented.');
   }
 
   Future<SafWriteStreamInfo> startWriteStream(
-      String treeUri, String fileName, String mime) async {
+      Uri treeUri, String fileName, String mime) async {
     throw UnimplementedError('startWriteStream() has not been implemented.');
   }
 
