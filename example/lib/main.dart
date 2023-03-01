@@ -40,8 +40,11 @@ class _MyAppState extends State<MyApp> {
                   onPressed: _selectFolder,
                   child: const Text('Select a folder')),
               OutlinedButton(
-                  onPressed: _writeFile,
+                  onPressed: () => _writeFile(null),
                   child: const Text('Create a new random file')),
+              OutlinedButton(
+                  onPressed: () => _writeFile('1.txt'),
+                  child: const Text('Create 1.txt')),
               ...(_files.map((f) => Row(
                     children: [
                       Text(f.name ?? ''),
@@ -69,7 +72,7 @@ class _MyAppState extends State<MyApp> {
       if (treeUri == null) {
         return;
       }
-      _treeUri = Uri.directory(treeUri.toString());
+      _treeUri = treeUri;
       const List<DocumentFileColumn> columns = <DocumentFileColumn>[
         DocumentFileColumn.displayName,
         DocumentFileColumn.size,
@@ -81,6 +84,7 @@ class _MyAppState extends State<MyApp> {
       var files = await saf.listFiles(treeUri, columns: columns).toList();
       setState(() {
         _files = files;
+        _output = '';
       });
     } catch (err) {
       setState(() {
@@ -108,14 +112,14 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _writeFile() async {
+  Future<void> _writeFile(String? fileName) async {
     try {
       var treeUri = _treeUri;
       if (treeUri == null) {
         return;
       }
       var session = ++_session;
-      var fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      fileName = fileName ?? DateTime.now().millisecondsSinceEpoch.toString();
 
       var info = await _safStreamPlugin.startWriteStream(
           treeUri, fileName, 'text/plain');
@@ -131,7 +135,9 @@ class _MyAppState extends State<MyApp> {
         await Future<void>.delayed(const Duration(seconds: 1));
       }
       await _safStreamPlugin.endWriteStream(info.session);
-      _output += '$session - <Finished writing uri ${info.uri}>\n';
+      setState(() {
+        _output += '$session - <Finished writing uri ${info.uri}>\n';
+      });
     } catch (err) {
       setState(() {
         _output = err.toString();

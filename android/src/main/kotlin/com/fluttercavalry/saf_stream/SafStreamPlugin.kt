@@ -64,12 +64,13 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
           val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
             ?: throw Exception("Directory not found")
-          var newFile = dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
-          var outStream = context.contentResolver.openOutputStream(newFile.uri)
+
+          var fileUri = dir.findFile(fileName) ?: dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
+          var outStream = context.contentResolver.openOutputStream(fileUri.uri)
             ?: throw Exception("Stream creation failed")
           writeStreams[session] = outStream
 
-          result.success(newFile.uri.toString())
+          result.success(fileUri.uri.toString())
         } catch (err: Exception) {
           result.error("StartWriteStream", err.message, null)
         }
