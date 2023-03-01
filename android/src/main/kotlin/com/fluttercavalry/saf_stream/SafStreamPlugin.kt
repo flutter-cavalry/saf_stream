@@ -66,7 +66,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
             ?: throw Exception("Directory not found")
 
           var fileUri = dir.findFile(fileName) ?: dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
-          var outStream = context.contentResolver.openOutputStream(fileUri.uri)
+          var outStream = context.contentResolver.openOutputStream(fileUri.uri, "wt")
             ?: throw Exception("Stream creation failed")
           writeStreams[session] = outStream
 
