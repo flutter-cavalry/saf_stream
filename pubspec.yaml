@@ -1,10 +1,10 @@
 name: saf_stream
 description: A new Flutter plugin project.
-version: 0.0.1
+version: 0.0.2
 homepage:
 
 environment:
-  sdk: '>=2.19.2 <3.0.0'
+  sdk: ">=2.19.2 <3.0.0"
   flutter: ">=2.5.0"
 
 dependencies:
