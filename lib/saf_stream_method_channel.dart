@@ -3,9 +3,14 @@ import 'package:flutter/services.dart';
 
 import 'saf_stream_platform_interface.dart';
 
+/// Contains information about an out stream.
 class SafWriteStreamInfo {
+  /// A unique string to identity this stream.
   final String session;
+
+  /// The Uri of the destination file.
   final Uri uri;
+
   SafWriteStreamInfo(this.session, this.uri);
 }
 
