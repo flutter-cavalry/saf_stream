@@ -10,6 +10,11 @@ class SafStream {
     return SafStreamPlatform.instance.readFile(uri, bufferSize: bufferSize);
   }
 
+  /// Copies a file from the given [uri] to the [dest].
+  Future<void> readFileToLocal(Uri src, String dest) async {
+    return SafStreamPlatform.instance.readFileToLocal(src, dest);
+  }
+
   /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]
   /// to write data into the destination stream. Call [endWriteStream] close the destination stream.
   Future<SafWriteStreamInfo> startWriteStream(

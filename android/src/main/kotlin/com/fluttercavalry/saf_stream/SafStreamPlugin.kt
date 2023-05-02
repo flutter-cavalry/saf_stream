@@ -13,6 +13,8 @@ import io.flutter.plugin.common.MethodChannel.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -54,6 +56,21 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
           result.error("ReadFileError", err.message, null)
         }
       }
+
+      "readFileToLocal" -> {
+        val fileUriStr = Uri.parse(call.argument<String>("src")!!)
+        val dest = call.argument<String>("dest")!!
+
+        CoroutineScope(Dispatchers.IO).launch {
+          val inputStream = context.contentResolver.openInputStream(fileUriStr)
+          val outputStream = FileOutputStream(File(dest))
+          outputStream?.let { inputStream?.copyTo(it) }
+          launch(Dispatchers.Main) {
+            result.success(null)
+          }
+        }
+      }
+
       "startWriteStream" -> {
         try {
           // Arguments are enforced on dart side.

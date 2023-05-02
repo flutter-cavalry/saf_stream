@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'dart:async';
 
 import 'package:shared_storage/shared_storage.dart' as saf;
 import 'package:saf_stream/saf_stream.dart';
+import 'package:tmp_path/tmp_path.dart';
 
 void main() {
   runApp(const MyApp());
@@ -45,25 +47,31 @@ class _MyAppState extends State<MyApp> {
               OutlinedButton(
                   onPressed: () => _writeFile('1.txt'),
                   child: const Text('Create 1.txt')),
-              ...(_files.map((f) => Row(
+              ...(_files.where((f) => f.isFile == true).map((f) => Column(
                     children: [
                       Text(f.name ?? ''),
-                      const SizedBox(width: 10),
-                      Text(f.isFile == true ? 'F' : 'D'),
-                      const SizedBox(width: 10),
+                      _sep(),
                       OutlinedButton(
                           onPressed: () => _readFile(f.uri),
-                          child: const Text('Read stream'))
+                          child: const Text('Read stream')),
+                      _sep(),
+                      OutlinedButton(
+                          onPressed: () => _readFileToLocal(f.uri),
+                          child: const Text('Copy to local file')),
                     ],
                   ))),
               const SizedBox(width: 10),
-              const Text('Output'),
+              _sep(),
               Text(_output)
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _sep() {
+    return const SizedBox(width: 10);
   }
 
   Future<void> _selectFolder() async {
@@ -95,6 +103,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _readFile(Uri uri) async {
     try {
+      _clearOutput();
       var session = ++_session;
       await for (var bytes
           in await _safStreamPlugin.readFile(uri, bufferSize: 500 * 1024)) {
@@ -112,8 +121,31 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  void _clearOutput() {
+    setState(() {
+      _output = '';
+    });
+  }
+
+  Future<void> _readFileToLocal(Uri uri) async {
+    try {
+      _clearOutput();
+      final dest = tmpPath();
+      await _safStreamPlugin.readFileToLocal(uri, dest);
+      final localContents = await File(dest).readAsBytes();
+      setState(() {
+        _output += 'Local contents:\n$localContents\n';
+      });
+    } catch (err) {
+      setState(() {
+        _output = err.toString();
+      });
+    }
+  }
+
   Future<void> _writeFile(String? fileName) async {
     try {
+      _clearOutput();
       var treeUri = _treeUri;
       if (treeUri == null) {
         return;

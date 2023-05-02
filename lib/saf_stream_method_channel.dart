@@ -38,6 +38,14 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
+  Future<void> readFileToLocal(Uri src, String dest) async {
+    await methodChannel.invokeMethod<String>('readFileToLocal', {
+      'src': src.toString(),
+      'dest': dest,
+    });
+  }
+
+  @override
   Future<SafWriteStreamInfo> startWriteStream(
       Uri treeUri, String fileName, String mime) async {
     var session = _nextSession().toString();
