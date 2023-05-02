@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/saf_stream.svg)](https://pub.dev/packages/saf_stream)
 
-Read and write Android SAF `DocumentFile` with streams.
+Read and write Android SAF `DocumentFile` with streams. Min SDK version: **API 21**.
 
 ## Usage
 
