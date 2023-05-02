@@ -36,34 +36,46 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: SingleChildScrollView(
-          child: Column(
-            children: [
-              OutlinedButton(
-                  onPressed: _selectFolder,
-                  child: const Text('Select a folder')),
-              OutlinedButton(
-                  onPressed: () => _writeFile(null),
-                  child: const Text('Create a new random file')),
-              OutlinedButton(
-                  onPressed: () => _writeFile('1.txt'),
-                  child: const Text('Create 1.txt')),
-              ...(_files.where((f) => f.isFile == true).map((f) => Column(
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            child: _treeUri == null
+                ? OutlinedButton(
+                    onPressed: _selectFolder,
+                    child: const Text('Select a folder'))
+                : Column(
                     children: [
-                      Text(f.name ?? ''),
-                      _sep(),
                       OutlinedButton(
-                          onPressed: () => _readFile(f.uri),
-                          child: const Text('Read stream')),
-                      _sep(),
+                          onPressed: _reload, child: const Text('Reload')),
                       OutlinedButton(
-                          onPressed: () => _readFileToLocal(f.uri),
-                          child: const Text('Copy to local file')),
+                          onPressed: () => _writeFile(null),
+                          child: const Text('Create a new random file')),
+                      OutlinedButton(
+                          onPressed: () => _writeFile('1.txt'),
+                          child: const Text('Create 1.txt')),
+                      OutlinedButton(
+                          onPressed: () => _writeFileFromLocal(),
+                          child: const Text(
+                              'Create a.bin from local file (writeFileFromLocal)')),
+                      ...(_files
+                          .where((f) => f.isFile == true)
+                          .map((f) => Column(
+                                children: [
+                                  Text(f.name ?? ''),
+                                  _sep(),
+                                  OutlinedButton(
+                                      onPressed: () => _readFile(f.uri),
+                                      child: const Text('Read stream')),
+                                  _sep(),
+                                  OutlinedButton(
+                                      onPressed: () => _readFileToLocal(f.uri),
+                                      child: const Text('Copy to local file')),
+                                ],
+                              ))),
+                      const SizedBox(width: 10),
+                      _sep(),
+                      Text(_output)
                     ],
-                  ))),
-              const SizedBox(width: 10),
-              _sep(),
-              Text(_output)
-            ],
+                  ),
           ),
         ),
       ),
@@ -74,13 +86,11 @@ class _MyAppState extends State<MyApp> {
     return const SizedBox(width: 10);
   }
 
-  Future<void> _selectFolder() async {
+  Future<void> _reload() async {
     try {
-      var treeUri = await saf.openDocumentTree(persistablePermission: false);
-      if (treeUri == null) {
+      if (_treeUri == null) {
         return;
       }
-      _treeUri = treeUri;
       const List<DocumentFileColumn> columns = <DocumentFileColumn>[
         DocumentFileColumn.displayName,
         DocumentFileColumn.size,
@@ -89,11 +99,26 @@ class _MyAppState extends State<MyApp> {
             .id, // Optional column, will be available/queried regardless if is or not included here
         DocumentFileColumn.mimeType,
       ];
-      var files = await saf.listFiles(treeUri, columns: columns).toList();
+      var files = await saf.listFiles(_treeUri!, columns: columns).toList();
       setState(() {
         _files = files;
         _output = '';
       });
+    } catch (err) {
+      setState(() {
+        _output = err.toString();
+      });
+    }
+  }
+
+  Future<void> _selectFolder() async {
+    try {
+      var treeUri = await saf.openDocumentTree(persistablePermission: false);
+      if (treeUri == null) {
+        return;
+      }
+      _treeUri = treeUri;
+      await _reload();
     } catch (err) {
       setState(() {
         _output = err.toString();
@@ -169,6 +194,29 @@ class _MyAppState extends State<MyApp> {
       await _safStreamPlugin.endWriteStream(info.session);
       setState(() {
         _output += '$session - <Finished writing uri ${info.uri}>\n';
+      });
+    } catch (err) {
+      setState(() {
+        _output = err.toString();
+      });
+    }
+  }
+
+  Future<void> _writeFileFromLocal() async {
+    try {
+      _clearOutput();
+      var treeUri = _treeUri;
+      if (treeUri == null) {
+        return;
+      }
+
+      final localSrc = tmpPath();
+      await File(localSrc).writeAsString('✅❌❤️⚒️😊😒');
+
+      final destUri = await _safStreamPlugin.writeFileFromLocal(
+          localSrc, treeUri, 'a.bin', 'application/octet-stream');
+      setState(() {
+        _output = 'Created file: $destUri\n';
       });
     } catch (err) {
       setState(() {

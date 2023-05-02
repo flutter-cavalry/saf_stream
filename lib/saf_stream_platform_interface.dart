@@ -33,6 +33,11 @@ abstract class SafStreamPlatform extends PlatformInterface {
     throw UnimplementedError('readFileToLocal() has not been implemented.');
   }
 
+  Future<Uri> writeFileFromLocal(
+      String localSrc, Uri treeUri, String fileName, String mime) async {
+    throw UnimplementedError('writeFileFromLocal() has not been implemented.');
+  }
+
   Future<SafWriteStreamInfo> startWriteStream(
       Uri treeUri, String fileName, String mime) async {
     throw UnimplementedError('startWriteStream() has not been implemented.');

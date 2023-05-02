@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
@@ -68,6 +69,33 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
           launch(Dispatchers.Main) {
             result.success(null)
           }
+        }
+      }
+
+      "writeFileFromLocal" -> {
+        try {
+          // Arguments are enforced on dart side.
+          val treeUriStr = call.argument<String>("treeUri")!!
+          val fileName = call.argument<String>("fileName")!!
+          val mime = call.argument<String>("mime")!!
+          val localSrc = call.argument<String>("localSrc")!!
+
+          val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
+            ?: throw Exception("Directory not found")
+
+          var fileUri = dir.findFile(fileName) ?: dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
+          var outStream = context.contentResolver.openOutputStream(fileUri.uri, "wt")
+            ?: throw Exception("Stream creation failed")
+          var inStream = FileInputStream(File(localSrc))
+
+          CoroutineScope(Dispatchers.IO).launch {
+            outStream?.let { inStream?.copyTo(it) }
+            launch(Dispatchers.Main) {
+              result.success(fileUri.uri.toString())
+            }
+          }
+        } catch (err: Exception) {
+          result.error("StartWriteStream", err.message, null)
         }
       }
 

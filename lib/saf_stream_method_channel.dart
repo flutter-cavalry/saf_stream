@@ -46,6 +46,21 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
+  Future<Uri> writeFileFromLocal(
+      String localSrc, Uri treeUri, String fileName, String mime) async {
+    var uri = await methodChannel.invokeMethod<String>('writeFileFromLocal', {
+      'localSrc': localSrc,
+      'treeUri': treeUri.toString(),
+      'fileName': fileName,
+      'mime': mime
+    });
+    if (uri == null) {
+      throw Exception('Unexpected empty Uri');
+    }
+    return Uri.parse(uri);
+  }
+
+  @override
   Future<SafWriteStreamInfo> startWriteStream(
       Uri treeUri, String fileName, String mime) async {
     var session = _nextSession().toString();

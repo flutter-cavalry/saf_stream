@@ -15,6 +15,14 @@ class SafStream {
     return SafStreamPlatform.instance.readFileToLocal(src, dest);
   }
 
+  /// Copies the contents of [localSrc] and creates a new file from the given [treeUri], [fileName] and [mime].
+  /// Returns the Uri of the created file.
+  Future<Uri> writeFileFromLocal(
+      String localSrc, Uri treeUri, String fileName, String mime) async {
+    return SafStreamPlatform.instance
+        .writeFileFromLocal(localSrc, treeUri, fileName, mime);
+  }
+
   /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]
   /// to write data into the destination stream. Call [endWriteStream] close the destination stream.
   Future<SafWriteStreamInfo> startWriteStream(
