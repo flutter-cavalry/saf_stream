@@ -84,7 +84,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
             ?: throw Exception("Directory not found")
 
           var fileUri = dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
-          var outStream = context.contentResolver.openOutputStream(fileUri.uri, "wt")
+          var outStream = context.contentResolver.openOutputStream(fileUri.uri)
             ?: throw Exception("Stream creation failed")
           var inStream = FileInputStream(File(localSrc))
 
@@ -110,8 +110,8 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
           val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
             ?: throw Exception("Directory not found")
 
-          var fileUri = dir.findFile(fileName) ?: dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
-          var outStream = context.contentResolver.openOutputStream(fileUri.uri, "wt")
+          var fileUri = dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
+          var outStream = context.contentResolver.openOutputStream(fileUri.uri)
             ?: throw Exception("Stream creation failed")
           writeStreams[session] = outStream
 

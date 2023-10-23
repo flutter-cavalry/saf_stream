@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:shared_storage/saf.dart';
 import 'dart:async';
 
 import 'package:shared_storage/shared_storage.dart' as saf;
@@ -23,7 +22,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final _safStreamPlugin = SafStream();
-  List<DocumentFile> _files = [];
+  List<saf.DocumentFile> _files = [];
   Uri? _treeUri;
   String _output = '';
   int _session = 0;
@@ -91,13 +90,13 @@ class _MyAppState extends State<MyApp> {
       if (_treeUri == null) {
         return;
       }
-      const List<DocumentFileColumn> columns = <DocumentFileColumn>[
-        DocumentFileColumn.displayName,
-        DocumentFileColumn.size,
-        DocumentFileColumn.lastModified,
-        DocumentFileColumn
+      const List<saf.DocumentFileColumn> columns = <saf.DocumentFileColumn>[
+        saf.DocumentFileColumn.displayName,
+        saf.DocumentFileColumn.size,
+        saf.DocumentFileColumn.lastModified,
+        saf.DocumentFileColumn
             .id, // Optional column, will be available/queried regardless if is or not included here
-        DocumentFileColumn.mimeType,
+        saf.DocumentFileColumn.mimeType,
       ];
       var files = await saf.listFiles(_treeUri!, columns: columns).toList();
       setState(() {
