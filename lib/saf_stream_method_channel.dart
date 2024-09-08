@@ -12,7 +12,7 @@ class SafWriteStreamInfo {
   final Uri uri;
 
   /// The name of the destination file.
-  final String fileName;
+  final String? fileName;
 
   SafWriteStreamInfo(this.session, this.uri, this.fileName);
 
@@ -82,8 +82,12 @@ class MethodChannelSafStream extends SafStreamPlatform {
     if (map == null) {
       throw Exception('Unexpected empty response from `startWriteStream`');
     }
-    final uri = Uri.parse(map['uri']);
-    final newFileName = map['fileName'];
+    final uriString = map['uri'] as String?;
+    if (uriString == null) {
+      throw Exception('Unexpected empty uri from `startWriteStream`');
+    }
+    final uri = Uri.parse(uriString);
+    final newFileName = map['fileName'] as String?;
     return SafWriteStreamInfo(session, uri, newFileName);
   }
 
