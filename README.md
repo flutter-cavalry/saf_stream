@@ -15,7 +15,7 @@ Future<void> readFileToLocal(Uri src, String dest);
 
 /// Copies the contents of [localSrc] and creates a new file from the given [treeUri], [fileName] and [mime].
 /// Returns the Uri of the created file.
-Future<Uri> writeFileFromLocal(
+Future<SafNewFile> writeFileFromLocal(
     String localSrc, Uri treeUri, String fileName, String mime);
 
 /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]

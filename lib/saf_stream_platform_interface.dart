@@ -4,6 +4,47 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'saf_stream_method_channel.dart';
 
+/// Describes the result of a write operation.
+class SafNewFile {
+  /// The Uri of the destination file.
+  final Uri uri;
+
+  /// The name of the destination file.
+  final String? fileName;
+
+  SafNewFile(this.uri, this.fileName);
+
+  @override
+  String toString() {
+    return 'SafWriteResult{uri: $uri, fileName: $fileName}';
+  }
+
+  static SafNewFile fromMap(Map<String, dynamic> map) {
+    final uriString = map['uri'] as String?;
+    if (uriString == null) {
+      throw Exception('Unexpected empty uri from `SafFileNewFile`');
+    }
+    final fileName = map['fileName'] as String?;
+    return SafNewFile(Uri.parse(uriString), fileName);
+  }
+}
+
+/// Contains information about an SAF out stream.
+class SafWriteStreamInfo {
+  /// A unique string to identity this stream.
+  final String session;
+
+  /// The information of the destination file.
+  final SafNewFile fileResult;
+
+  SafWriteStreamInfo(this.session, this.fileResult);
+
+  @override
+  String toString() {
+    return 'SafWriteStreamInfo{session: $session, fileResult: $fileResult}';
+  }
+}
+
 abstract class SafStreamPlatform extends PlatformInterface {
   /// Constructs a SafStreamPlatform.
   SafStreamPlatform() : super(token: _token);
@@ -33,7 +74,7 @@ abstract class SafStreamPlatform extends PlatformInterface {
     throw UnimplementedError('readFileToLocal() has not been implemented.');
   }
 
-  Future<Uri> writeFileFromLocal(
+  Future<SafNewFile> writeFileFromLocal(
       String localSrc, Uri treeUri, String fileName, String mime) async {
     throw UnimplementedError('writeFileFromLocal() has not been implemented.');
   }

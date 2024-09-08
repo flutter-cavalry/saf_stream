@@ -83,15 +83,19 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
           val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
             ?: throw Exception("Directory not found")
 
-          var fileUri = dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
-          var outStream = context.contentResolver.openOutputStream(fileUri.uri)
+          val newFile = dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
+          var outStream = context.contentResolver.openOutputStream(newFile.uri)
             ?: throw Exception("Stream creation failed")
           var inStream = FileInputStream(File(localSrc))
+
+            val map = HashMap<String, Any?>()
+            map["uri"] = newFile.uri.toString()
+            map["fileName"] = newFile.name
 
           CoroutineScope(Dispatchers.IO).launch {
             outStream?.let { inStream?.copyTo(it) }
             launch(Dispatchers.Main) {
-              result.success(fileUri.uri.toString())
+              result.success(map)
             }
           }
         } catch (err: Exception) {

@@ -192,7 +192,7 @@ class _MyAppState extends State<MyApp> {
       }
       await _safStreamPlugin.endWriteStream(info.session);
       setState(() {
-        _output += '$session - <Finished writing uri ${info.uri}>\n';
+        _output += '$session - <Finished writing $info>\n';
       });
     } catch (err) {
       setState(() {
@@ -212,10 +212,10 @@ class _MyAppState extends State<MyApp> {
       final localSrc = tmpPath();
       await File(localSrc).writeAsString('✅❌❤️⚒️😊😒');
 
-      final destUri = await _safStreamPlugin.writeFileFromLocal(
+      final info = await _safStreamPlugin.writeFileFromLocal(
           localSrc, treeUri, 'a.bin', 'application/octet-stream');
       setState(() {
-        _output = 'Created file: $destUri\n';
+        _output = 'Created file: $info\n';
       });
     } catch (err) {
       setState(() {

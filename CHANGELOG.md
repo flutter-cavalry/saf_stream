@@ -1,3 +1,7 @@
+## 0.6.0
+
+- Return `SafNewFile` in `writeFileFromLocal`.
+
 ## 0.5.0
 
 - Add `fileName` to `SafWriteStreamInfo`.

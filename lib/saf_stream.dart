@@ -1,7 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:saf_stream/saf_stream_method_channel.dart';
-
 import 'saf_stream_platform_interface.dart';
 
 class SafStream {
@@ -17,7 +15,7 @@ class SafStream {
 
   /// Copies the contents of [localSrc] and creates a new file from the given [treeUri], [fileName] and [mime].
   /// Returns the Uri of the created file.
-  Future<Uri> writeFileFromLocal(
+  Future<SafNewFile> writeFileFromLocal(
       String localSrc, Uri treeUri, String fileName, String mime) async {
     return SafStreamPlatform.instance
         .writeFileFromLocal(localSrc, treeUri, fileName, mime);

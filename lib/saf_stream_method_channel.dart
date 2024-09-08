@@ -3,25 +3,6 @@ import 'package:flutter/services.dart';
 
 import 'saf_stream_platform_interface.dart';
 
-/// Contains information about an SAF out stream.
-class SafWriteStreamInfo {
-  /// A unique string to identity this stream.
-  final String session;
-
-  /// The Uri of the destination file.
-  final Uri uri;
-
-  /// The name of the destination file.
-  final String? fileName;
-
-  SafWriteStreamInfo(this.session, this.uri, this.fileName);
-
-  @override
-  String toString() {
-    return 'SafWriteStreamInfo{session: $session, uri: $uri, fileName: $fileName}';
-  }
-}
-
 /// An implementation of [SafStreamPlatform] that uses method channels.
 class MethodChannelSafStream extends SafStreamPlatform {
   /// The method channel used to interact with the native platform.
@@ -54,18 +35,19 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
-  Future<Uri> writeFileFromLocal(
+  Future<SafNewFile> writeFileFromLocal(
       String localSrc, Uri treeUri, String fileName, String mime) async {
-    var uri = await methodChannel.invokeMethod<String>('writeFileFromLocal', {
+    var map = await methodChannel
+        .invokeMapMethod<String, dynamic>('writeFileFromLocal', {
       'localSrc': localSrc,
       'treeUri': treeUri.toString(),
       'fileName': fileName,
       'mime': mime
     });
-    if (uri == null) {
-      throw Exception('Unexpected empty Uri');
+    if (map == null) {
+      throw Exception('Unexpected empty response from `writeFileFromLocal`');
     }
-    return Uri.parse(uri);
+    return SafNewFile.fromMap(map);
   }
 
   @override
@@ -82,13 +64,8 @@ class MethodChannelSafStream extends SafStreamPlatform {
     if (map == null) {
       throw Exception('Unexpected empty response from `startWriteStream`');
     }
-    final uriString = map['uri'] as String?;
-    if (uriString == null) {
-      throw Exception('Unexpected empty uri from `startWriteStream`');
-    }
-    final uri = Uri.parse(uriString);
-    final newFileName = map['fileName'] as String?;
-    return SafWriteStreamInfo(session, uri, newFileName);
+    final newFile = SafNewFile.fromMap(map);
+    return SafWriteStreamInfo(session, newFile);
   }
 
   @override
