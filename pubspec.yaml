@@ -1,6 +1,6 @@
 name: saf_stream
 description: Read and write Android SAF `DocumentFile` with stream.
-version: 0.4.0
+version: 0.5.0
 homepage: https://github.com/flutter-cavalry/saf_stream
 
 environment:

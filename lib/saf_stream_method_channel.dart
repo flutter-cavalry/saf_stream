@@ -15,6 +15,11 @@ class SafWriteStreamInfo {
   final String fileName;
 
   SafWriteStreamInfo(this.session, this.uri, this.fileName);
+
+  @override
+  String toString() {
+    return 'SafWriteStreamInfo{session: $session, uri: $uri, fileName: $fileName}';
+  }
 }
 
 /// An implementation of [SafStreamPlatform] that uses method channels.

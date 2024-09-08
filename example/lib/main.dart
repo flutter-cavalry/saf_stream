@@ -180,7 +180,7 @@ class _MyAppState extends State<MyApp> {
       var info = await _safStreamPlugin.startWriteStream(
           treeUri, fileName, 'text/plain');
       setState(() {
-        _output += '$session - <Writing uri ${info.uri}>\n';
+        _output += '$session - <Writing file $info>\n';
       });
       for (var i = 0; i < 3; i++) {
         setState(() {
