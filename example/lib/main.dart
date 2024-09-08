@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:shared_storage/shared_storage.dart' as saf;
+import 'package:mg_shared_storage/shared_storage.dart' as saf;
 import 'package:saf_stream/saf_stream.dart';
 import 'package:tmp_path/tmp_path.dart';
 
