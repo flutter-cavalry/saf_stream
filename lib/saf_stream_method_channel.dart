@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'saf_stream_platform_interface.dart';
 
-/// Contains information about an out stream.
+/// Contains information about an SAF out stream.
 class SafWriteStreamInfo {
   /// A unique string to identity this stream.
   final String session;
@@ -11,7 +11,10 @@ class SafWriteStreamInfo {
   /// The Uri of the destination file.
   final Uri uri;
 
-  SafWriteStreamInfo(this.session, this.uri);
+  /// The name of the destination file.
+  final String fileName;
+
+  SafWriteStreamInfo(this.session, this.uri, this.fileName);
 }
 
 /// An implementation of [SafStreamPlatform] that uses method channels.
@@ -64,16 +67,19 @@ class MethodChannelSafStream extends SafStreamPlatform {
   Future<SafWriteStreamInfo> startWriteStream(
       Uri treeUri, String fileName, String mime) async {
     var session = _nextSession().toString();
-    var uri = await methodChannel.invokeMethod<String>('startWriteStream', {
+    var map = await methodChannel
+        .invokeMapMethod<String, dynamic>('startWriteStream', {
       'treeUri': treeUri.toString(),
       'session': session,
       'fileName': fileName,
       'mime': mime
     });
-    if (uri == null) {
-      throw Exception('Unexpected empty Uri');
+    if (map == null) {
+      throw Exception('Unexpected empty response from `startWriteStream`');
     }
-    return SafWriteStreamInfo(session, Uri.parse(uri));
+    final uri = Uri.parse(map['uri']);
+    final newFileName = map['fileName'];
+    return SafWriteStreamInfo(session, uri, newFileName);
   }
 
   @override
