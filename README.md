@@ -19,7 +19,7 @@ Future<SafNewFile> writeFileFromLocal(
     String localSrc, Uri treeUri, String fileName, String mime);
 
 /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]
-/// to write data into the destination stream. Call [endWriteStream] close the destination stream.
+/// to write data into the destination stream. Call [endWriteStream] to close the destination stream.
 Future<SafWriteStreamInfo> startWriteStream(
     Uri treeUri, String fileName, String mime);
 
