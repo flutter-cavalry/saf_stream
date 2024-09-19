@@ -55,21 +55,32 @@ class _MyAppState extends State<MyApp> {
                           onPressed: () => _pasteLocalFile(),
                           child: const Text(
                               'Create a.bin from local file (pasteLocalFile)')),
-                      ...(_files
-                          .where((f) => f.isFile == true)
-                          .map((f) => Column(
-                                children: [
-                                  Text(f.name ?? ''),
-                                  _sep(),
-                                  OutlinedButton(
-                                      onPressed: () => _readFile(f.uri),
-                                      child: const Text('Read stream')),
-                                  _sep(),
-                                  OutlinedButton(
-                                      onPressed: () => _copyToLocalFile(f.uri),
-                                      child: const Text('Copy to local file')),
-                                ],
-                              ))),
+                      OutlinedButton(
+                          onPressed: () => _writeFileSync(),
+                          child: const Text('Write a.bin sync')),
+                      ...(_files.where((f) => f.isFile == true).map((f) =>
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey)),
+                            child: Column(
+                              children: [
+                                Text(f.name ?? ''),
+                                _sep(),
+                                OutlinedButton(
+                                    onPressed: () => _readFile(f.uri),
+                                    child: const Text('Read stream')),
+                                _sep(),
+                                OutlinedButton(
+                                    onPressed: () => _readFileSync(f.uri),
+                                    child: const Text('Read sync')),
+                                _sep(),
+                                OutlinedButton(
+                                    onPressed: () => _copyToLocalFile(f.uri),
+                                    child: const Text('Copy to local file')),
+                              ],
+                            ),
+                          ))),
                       const SizedBox(width: 10),
                       _sep(),
                       Text(_output)
@@ -137,6 +148,21 @@ class _MyAppState extends State<MyApp> {
       }
       setState(() {
         _output += '$session - <Done>\n';
+      });
+    } catch (err) {
+      setState(() {
+        _output = err.toString();
+      });
+    }
+  }
+
+  Future<void> _readFileSync(Uri uri) async {
+    try {
+      _clearOutput();
+      var session = ++_session;
+      final bytes = await _safStreamPlugin.readFileSync(uri);
+      setState(() {
+        _output += '$session - Bytes: ${bytes.lengthInBytes} \n';
       });
     } catch (err) {
       setState(() {
@@ -214,6 +240,29 @@ class _MyAppState extends State<MyApp> {
 
       final info = await _safStreamPlugin.pasteLocalFile(
           localSrc, treeUri, 'a.bin', 'application/octet-stream');
+      setState(() {
+        _output = 'Created file: $info\n';
+      });
+    } catch (err) {
+      setState(() {
+        _output = err.toString();
+      });
+    }
+  }
+
+  Future<void> _writeFileSync() async {
+    try {
+      _clearOutput();
+      var treeUri = _treeUri;
+      if (treeUri == null) {
+        return;
+      }
+
+      final info = await _safStreamPlugin.writeFileSync(
+          treeUri,
+          'a.bin',
+          'application/octet-stream',
+          Uint8List.fromList(utf8.encode('✅❌❤️⚒️😊😒')));
       setState(() {
         _output = 'Created file: $info\n';
       });

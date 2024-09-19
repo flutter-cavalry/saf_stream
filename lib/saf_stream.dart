@@ -3,9 +3,14 @@ import 'dart:typed_data';
 import 'saf_stream_platform_interface.dart';
 
 class SafStream {
-  /// Creates a stream from the given [uri].
+  /// Reads the contents of a file from the given [uri] and returns a stream of bytes.
   Future<Stream<Uint8List>> readFile(Uri uri, {int? bufferSize}) async {
     return SafStreamPlatform.instance.readFile(uri, bufferSize: bufferSize);
+  }
+
+  /// Reads the contents of a file from the given [uri].
+  Future<Uint8List> readFileSync(Uri uri) async {
+    return SafStreamPlatform.instance.readFileSync(uri);
   }
 
   /// Copies a file from the given [uri] to a local file [dest].
@@ -20,6 +25,13 @@ class SafStream {
       String localSrc, Uri treeUri, String fileName, String mime) async {
     return SafStreamPlatform.instance
         .pasteLocalFile(localSrc, treeUri, fileName, mime);
+  }
+
+  /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
+  Future<SafNewFile> writeFileSync(
+      Uri treeUri, String fileName, String mime, Uint8List data) async {
+    return SafStreamPlatform.instance
+        .writeFileSync(treeUri, fileName, mime, data);
   }
 
   /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]

@@ -27,6 +27,17 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
+  Future<Uint8List> readFileSync(Uri uri) async {
+    final res = await methodChannel.invokeMethod<Uint8List>('readFileSync', {
+      'fileUri': uri.toString(),
+    });
+    if (res == null) {
+      throw Exception('Unexpected empty response from `readFileSync`');
+    }
+    return res;
+  }
+
+  @override
   Future<void> copyToLocalFile(Uri src, String dest) async {
     await methodChannel.invokeMethod<String>('copyToLocalFile', {
       'src': src.toString(),
@@ -46,6 +57,22 @@ class MethodChannelSafStream extends SafStreamPlatform {
     });
     if (map == null) {
       throw Exception('Unexpected empty response from `pasteLocalFile`');
+    }
+    return SafNewFile.fromMap(map);
+  }
+
+  @override
+  Future<SafNewFile> writeFileSync(
+      Uri treeUri, String fileName, String mime, Uint8List data) async {
+    var map =
+        await methodChannel.invokeMapMethod<String, dynamic>('writeFileSync', {
+      'treeUri': treeUri.toString(),
+      'fileName': fileName,
+      'mime': mime,
+      'data': data,
+    });
+    if (map == null) {
+      throw Exception('Unexpected empty response from `writeFileSync`');
     }
     return SafNewFile.fromMap(map);
   }
