@@ -1,6 +1,7 @@
 ## 0.7.0
 
-- [Breaking] Rename `readFileToLocal` and `writeFileFromLocal` to `copyToLocalFile` / `pasteLocalFile`
+- [Breaking] Rename `readFileToLocal` and `writeFileFromLocal` to `copyToLocalFile` / `pasteLocalFile`.
+- Add `readFileSync` and `writeFileSync` for synchronous file operations.
 
 ## 0.6.0
 
