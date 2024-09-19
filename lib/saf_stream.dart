@@ -8,17 +8,18 @@ class SafStream {
     return SafStreamPlatform.instance.readFile(uri, bufferSize: bufferSize);
   }
 
-  /// Copies a file from the given [uri] to the [dest].
-  Future<void> readFileToLocal(Uri src, String dest) async {
-    return SafStreamPlatform.instance.readFileToLocal(src, dest);
+  /// Copies a file from the given [uri] to a local file [dest].
+  Future<void> copyToLocalFile(Uri src, String dest) async {
+    return SafStreamPlatform.instance.copyToLocalFile(src, dest);
   }
 
-  /// Copies the contents of [localSrc] and creates a new file from the given [treeUri], [fileName] and [mime].
+  /// Copies the contents of a local file [localSrc] and creates a new file
+  /// from the given [treeUri], [fileName] and [mime].
   /// Returns the Uri of the created file.
-  Future<SafNewFile> writeFileFromLocal(
+  Future<SafNewFile> pasteLocalFile(
       String localSrc, Uri treeUri, String fileName, String mime) async {
     return SafStreamPlatform.instance
-        .writeFileFromLocal(localSrc, treeUri, fileName, mime);
+        .pasteLocalFile(localSrc, treeUri, fileName, mime);
   }
 
   /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]

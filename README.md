@@ -10,12 +10,13 @@ Read and write Android SAF `DocumentFile` with streams. Min SDK version: **API 2
 /// Creates a stream from the given [uri].
 Future<Stream<Uint8List>> readFile(Uri uri, {int? bufferSize});
 
-/// Copies a file from the given [uri] to the [dest].
-Future<void> readFileToLocal(Uri src, String dest);
+/// Copies a file from the given [uri] to a local file [dest].
+Future<void> copyToLocalFile(Uri src, String dest);
 
-/// Copies the contents of [localSrc] and creates a new file from the given [treeUri], [fileName] and [mime].
+/// Copies the contents of a local file [localSrc] and creates a new file
+/// from the given [treeUri], [fileName] and [mime].
 /// Returns the Uri of the created file.
-Future<SafNewFile> writeFileFromLocal(
+Future<SafNewFile> pasteLocalFile(
     String localSrc, Uri treeUri, String fileName, String mime);
 
 /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]

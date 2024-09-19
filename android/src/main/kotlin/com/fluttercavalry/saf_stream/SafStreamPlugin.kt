@@ -58,7 +58,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
         }
       }
 
-      "readFileToLocal" -> {
+      "copyToLocalFile" -> {
         val fileUriStr = Uri.parse(call.argument<String>("src")!!)
         val dest = call.argument<String>("dest")!!
 
@@ -72,7 +72,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
         }
       }
 
-      "writeFileFromLocal" -> {
+      "pasteLocalFile" -> {
         try {
           // Arguments are enforced on dart side.
           val treeUriStr = call.argument<String>("treeUri")!!

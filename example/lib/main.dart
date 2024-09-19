@@ -52,9 +52,9 @@ class _MyAppState extends State<MyApp> {
                           onPressed: () => _writeFile('1.txt'),
                           child: const Text('Create 1.txt')),
                       OutlinedButton(
-                          onPressed: () => _writeFileFromLocal(),
+                          onPressed: () => _pasteLocalFile(),
                           child: const Text(
-                              'Create a.bin from local file (writeFileFromLocal)')),
+                              'Create a.bin from local file (pasteLocalFile)')),
                       ...(_files
                           .where((f) => f.isFile == true)
                           .map((f) => Column(
@@ -66,7 +66,7 @@ class _MyAppState extends State<MyApp> {
                                       child: const Text('Read stream')),
                                   _sep(),
                                   OutlinedButton(
-                                      onPressed: () => _readFileToLocal(f.uri),
+                                      onPressed: () => _copyToLocalFile(f.uri),
                                       child: const Text('Copy to local file')),
                                 ],
                               ))),
@@ -151,11 +151,11 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> _readFileToLocal(Uri uri) async {
+  Future<void> _copyToLocalFile(Uri uri) async {
     try {
       _clearOutput();
       final dest = tmpPath();
-      await _safStreamPlugin.readFileToLocal(uri, dest);
+      await _safStreamPlugin.copyToLocalFile(uri, dest);
       final localContents = await File(dest).readAsBytes();
       setState(() {
         _output += 'Local contents:\n$localContents\n';
@@ -201,7 +201,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _writeFileFromLocal() async {
+  Future<void> _pasteLocalFile() async {
     try {
       _clearOutput();
       var treeUri = _treeUri;
@@ -212,7 +212,7 @@ class _MyAppState extends State<MyApp> {
       final localSrc = tmpPath();
       await File(localSrc).writeAsString('✅❌❤️⚒️😊😒');
 
-      final info = await _safStreamPlugin.writeFileFromLocal(
+      final info = await _safStreamPlugin.pasteLocalFile(
           localSrc, treeUri, 'a.bin', 'application/octet-stream');
       setState(() {
         _output = 'Created file: $info\n';

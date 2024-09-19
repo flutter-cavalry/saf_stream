@@ -27,25 +27,25 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
-  Future<void> readFileToLocal(Uri src, String dest) async {
-    await methodChannel.invokeMethod<String>('readFileToLocal', {
+  Future<void> copyToLocalFile(Uri src, String dest) async {
+    await methodChannel.invokeMethod<String>('copyToLocalFile', {
       'src': src.toString(),
       'dest': dest,
     });
   }
 
   @override
-  Future<SafNewFile> writeFileFromLocal(
+  Future<SafNewFile> pasteLocalFile(
       String localSrc, Uri treeUri, String fileName, String mime) async {
-    var map = await methodChannel
-        .invokeMapMethod<String, dynamic>('writeFileFromLocal', {
+    var map =
+        await methodChannel.invokeMapMethod<String, dynamic>('pasteLocalFile', {
       'localSrc': localSrc,
       'treeUri': treeUri.toString(),
       'fileName': fileName,
       'mime': mime
     });
     if (map == null) {
-      throw Exception('Unexpected empty response from `writeFileFromLocal`');
+      throw Exception('Unexpected empty response from `pasteLocalFile`');
     }
     return SafNewFile.fromMap(map);
   }
