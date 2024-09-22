@@ -22,14 +22,16 @@ class SafStream {
   /// from the given [treeUri], [fileName] and [mime].
   /// Returns the Uri of the created file.
   Future<SafNewFile> pasteLocalFile(
-      String localSrc, Uri treeUri, String fileName, String mime) async {
+      String localSrc, Uri treeUri, String fileName, String mime,
+      {bool? overwrite}) async {
     return SafStreamPlatform.instance
         .pasteLocalFile(localSrc, treeUri, fileName, mime);
   }
 
   /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
   Future<SafNewFile> writeFileSync(
-      Uri treeUri, String fileName, String mime, Uint8List data) async {
+      Uri treeUri, String fileName, String mime, Uint8List data,
+      {bool? overwrite}) async {
     return SafStreamPlatform.instance
         .writeFileSync(treeUri, fileName, mime, data);
   }
@@ -37,7 +39,8 @@ class SafStream {
   /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]
   /// to write data into the destination stream. Call [endWriteStream] to close the destination stream.
   Future<SafWriteStreamInfo> startWriteStream(
-      Uri treeUri, String fileName, String mime) async {
+      Uri treeUri, String fileName, String mime,
+      {bool? overwrite}) async {
     return SafStreamPlatform.instance.startWriteStream(treeUri, fileName, mime);
   }
 

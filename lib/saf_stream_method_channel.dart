@@ -47,13 +47,15 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafNewFile> pasteLocalFile(
-      String localSrc, Uri treeUri, String fileName, String mime) async {
+      String localSrc, Uri treeUri, String fileName, String mime,
+      {bool? overwrite}) async {
     var map =
         await methodChannel.invokeMapMethod<String, dynamic>('pasteLocalFile', {
       'localSrc': localSrc,
       'treeUri': treeUri.toString(),
       'fileName': fileName,
-      'mime': mime
+      'mime': mime,
+      'overwrite': overwrite ?? false,
     });
     if (map == null) {
       throw Exception('Unexpected empty response from `pasteLocalFile`');
@@ -63,13 +65,15 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafNewFile> writeFileSync(
-      Uri treeUri, String fileName, String mime, Uint8List data) async {
+      Uri treeUri, String fileName, String mime, Uint8List data,
+      {bool? overwrite}) async {
     var map =
         await methodChannel.invokeMapMethod<String, dynamic>('writeFileSync', {
       'treeUri': treeUri.toString(),
       'fileName': fileName,
       'mime': mime,
       'data': data,
+      'overwrite': overwrite ?? false,
     });
     if (map == null) {
       throw Exception('Unexpected empty response from `writeFileSync`');
@@ -79,14 +83,16 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafWriteStreamInfo> startWriteStream(
-      Uri treeUri, String fileName, String mime) async {
+      Uri treeUri, String fileName, String mime,
+      {bool? overwrite}) async {
     var session = _nextSession().toString();
     var map = await methodChannel
         .invokeMapMethod<String, dynamic>('startWriteStream', {
       'treeUri': treeUri.toString(),
       'session': session,
       'fileName': fileName,
-      'mime': mime
+      'mime': mime,
+      'overwrite': overwrite ?? false,
     });
     if (map == null) {
       throw Exception('Unexpected empty response from `startWriteStream`');
