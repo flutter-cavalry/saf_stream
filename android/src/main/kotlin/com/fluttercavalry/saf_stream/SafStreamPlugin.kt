@@ -91,14 +91,12 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                     val fileName = call.argument<String>("fileName")!!
                     val mime = call.argument<String>("mime")!!
                     val localSrc = call.argument<String>("localSrc")!!
+                    val overwrite = call.argument<Boolean>("overwrite")!!
 
                     val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
 
-                    val newFile = dir.createFile(mime, fileName)
-                            ?: throw Exception("File creation failed")
-                    var outStream = context.contentResolver.openOutputStream(newFile.uri)
-                            ?: throw Exception("Stream creation failed")
+                    val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
                     var inStream = FileInputStream(File(localSrc))
 
                     val map = HashMap<String, Any?>()
@@ -122,15 +120,13 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                     val treeUriStr = call.argument<String>("treeUri")!!
                     val fileName = call.argument<String>("fileName")!!
                     val mime = call.argument<String>("mime")!!
-                    var data = call.argument<ByteArray>("data")!!
+                    val data = call.argument<ByteArray>("data")!!
+                    val overwrite = call.argument<Boolean>("overwrite")!!
 
                     val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
 
-                    val newFile = dir.createFile(mime, fileName)
-                            ?: throw Exception("File creation failed")
-                    var outStream = context.contentResolver.openOutputStream(newFile.uri)
-                            ?: throw Exception("Stream creation failed")
+                    val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
 
                     val map = HashMap<String, Any?>()
                     map["uri"] = newFile.uri.toString()
@@ -154,14 +150,12 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                     val fileName = call.argument<String>("fileName")!!
                     val mime = call.argument<String>("mime")!!
                     val session = call.argument<String>("session")!!
+                    val overwrite = call.argument<Boolean>("overwrite")!!
 
                     val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
+                    val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
 
-                    val newFile = dir.createFile(mime, fileName)
-                            ?: throw Exception("File creation failed")
-                    var outStream = context.contentResolver.openOutputStream(newFile.uri)
-                            ?: throw Exception("Stream creation failed")
                     writeStreams[session] = outStream
 
                     val map = HashMap<String, Any?>()
@@ -203,7 +197,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                     // Arguments are enforced on dart side.
                     val session = call.argument<String>("session")!!
 
-                    var outStream = writeStreams[session]
+                    val outStream = writeStreams[session]
                     if (outStream == null) {
                         result.error("EndWriteStream", "Stream not found", null)
                         return
@@ -228,6 +222,15 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+    }
+
+    fun _createFile(dir: DocumentFile, fileName: String, mime: String, overwrite: Boolean) : Pair<DocumentFile, OutputStream> {
+        val needOverwrite = overwrite && dir.findFile(fileName) != null;
+        val newFile = dir.createFile(mime, fileName)
+                ?: throw Exception("File creation failed")
+        val outStream = context.contentResolver.openOutputStream(newFile.uri, if (needOverwrite) "wt" else "w")
+                ?: throw Exception("Stream creation failed")
+        return Pair(newFile, outStream)
     }
 }
 
