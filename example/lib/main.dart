@@ -46,18 +46,24 @@ class _MyAppState extends State<MyApp> {
                       OutlinedButton(
                           onPressed: _reload, child: const Text('Reload')),
                       OutlinedButton(
-                          onPressed: () => _writeFile(null),
+                          onPressed: () => _writeFile(null, false),
                           child: const Text('Create a new random file')),
                       OutlinedButton(
-                          onPressed: () => _writeFile('1.txt'),
+                          onPressed: () => _writeFile('1.txt', false),
                           child: const Text('Create 1.txt')),
                       OutlinedButton(
-                          onPressed: () => _pasteLocalFile(),
+                          onPressed: () => _writeFile('1.txt', true),
+                          child: const Text('Create 1.txt (overwrite)')),
+                      OutlinedButton(
+                          onPressed: () => _pasteLocalFile(false),
                           child: const Text(
                               'Create a.bin from local file (pasteLocalFile)')),
                       OutlinedButton(
-                          onPressed: () => _writeFileSync(),
+                          onPressed: () => _writeFileSync(false),
                           child: const Text('Write a.bin sync')),
+                      OutlinedButton(
+                          onPressed: () => _writeFileSync(true),
+                          child: const Text('Write a.bin sync (overwrite)')),
                       ...(_files.where((f) => f.isFile == true).map((f) =>
                           Container(
                             padding: const EdgeInsets.all(8),
@@ -193,7 +199,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _writeFile(String? fileName) async {
+  Future<void> _writeFile(String? fileName, bool overwrite) async {
     try {
       _clearOutput();
       var treeUri = _treeUri;
@@ -204,7 +210,8 @@ class _MyAppState extends State<MyApp> {
       fileName = fileName ?? DateTime.now().millisecondsSinceEpoch.toString();
 
       var info = await _safStreamPlugin.startWriteStream(
-          treeUri, fileName, 'text/plain');
+          treeUri, fileName, 'text/plain',
+          overwrite: overwrite);
       setState(() {
         _output += '$session - <Writing file $info>\n';
       });
@@ -227,7 +234,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _pasteLocalFile() async {
+  Future<void> _pasteLocalFile(bool overwrite) async {
     try {
       _clearOutput();
       var treeUri = _treeUri;
@@ -239,7 +246,8 @@ class _MyAppState extends State<MyApp> {
       await File(localSrc).writeAsString('✅❌❤️⚒️😊😒');
 
       final info = await _safStreamPlugin.pasteLocalFile(
-          localSrc, treeUri, 'a.bin', 'application/octet-stream');
+          localSrc, treeUri, 'a.bin', 'application/octet-stream',
+          overwrite: overwrite);
       setState(() {
         _output = 'Created file: $info\n';
       });
@@ -250,7 +258,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _writeFileSync() async {
+  Future<void> _writeFileSync(bool overwrite) async {
     try {
       _clearOutput();
       var treeUri = _treeUri;
@@ -262,7 +270,8 @@ class _MyAppState extends State<MyApp> {
           treeUri,
           'a.bin',
           'application/octet-stream',
-          Uint8List.fromList(utf8.encode('✅❌❤️⚒️😊😒')));
+          Uint8List.fromList(utf8.encode('✅❌❤️⚒️😊😒')),
+          overwrite: overwrite);
       setState(() {
         _output = 'Created file: $info\n';
       });
