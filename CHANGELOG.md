@@ -1,3 +1,7 @@
+## 0.7.5
+
+- Fix issues when overwriting file contents
+
 ## 0.7.0
 
 - [Breaking] Rename `readFileToLocal` and `writeFileFromLocal` to `copyToLocalFile` / `pasteLocalFile`.

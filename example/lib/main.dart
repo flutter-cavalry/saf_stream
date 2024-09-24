@@ -59,6 +59,10 @@ class _MyAppState extends State<MyApp> {
                           child: const Text(
                               'Create a.bin from local file (pasteLocalFile)')),
                       OutlinedButton(
+                          onPressed: () => _pasteLocalFile(true),
+                          child: const Text(
+                              'Create a.bin from local file (pasteLocalFile) (overwrite)')),
+                      OutlinedButton(
                           onPressed: () => _writeFileSync(false),
                           child: const Text('Write a.bin sync')),
                       OutlinedButton(

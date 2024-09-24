@@ -225,11 +225,19 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     fun _createFile(dir: DocumentFile, fileName: String, mime: String, overwrite: Boolean) : Pair<DocumentFile, OutputStream> {
-        val needOverwrite = overwrite && dir.findFile(fileName) != null;
-        val newFile = dir.createFile(mime, fileName)
-                ?: throw Exception("File creation failed")
-        val outStream = context.contentResolver.openOutputStream(newFile.uri, if (needOverwrite) "wt" else "w")
+        val outStream: OutputStream
+        val newFile: DocumentFile
+        if (overwrite) {
+            val curFile = dir.findFile(fileName)
+            newFile = curFile ?: dir.createFile(mime, fileName) ?: throw Exception("File creation failed")
+            outStream = context.contentResolver.openOutputStream(newFile.uri, "wt")
                 ?: throw Exception("Stream creation failed")
+        } else {
+            newFile = dir.createFile(mime, fileName)
+                ?: throw Exception("File creation failed")
+            outStream = context.contentResolver.openOutputStream(newFile.uri)
+                ?: throw Exception("Stream creation failed")
+        }
         return Pair(newFile, outStream)
     }
 }
