@@ -12,9 +12,10 @@ class MethodChannelSafStream extends SafStreamPlatform {
   var _session = 0;
 
   @override
-  Future<Stream<Uint8List>> readFile(Uri uri, {int? bufferSize}) async {
+  Future<Stream<Uint8List>> readFileStream(Uri uri, {int? bufferSize}) async {
     var session = _nextSession();
-    var channelName = await methodChannel.invokeMethod<String>('readFile', {
+    var channelName =
+        await methodChannel.invokeMethod<String>('readFileStream', {
       'fileUri': uri.toString(),
       'session': session.toString(),
       'bufferSize': bufferSize

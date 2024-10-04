@@ -39,16 +39,16 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
-            "readFile" -> {
+            "readFileStream" -> {
                 // Arguments are enforced on dart side.
                 val fileUriStr = call.argument<String>("fileUri")!!
                 val session = call.argument<String>("session")!!
-                var bufferSize = call.argument<Int>("bufferSize") ?: 4 * 1024 * 1024
+                val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
 
                 try {
                     val inStream = context.contentResolver.openInputStream(Uri.parse(fileUriStr))
                             ?: throw Exception("Stream creation failed")
-                    var streamHandler = ReadFileHandler(inStream, bufferSize)
+                    val streamHandler = ReadFileHandler(inStream, bufferSize)
                     val channelName = "saf_stream/readFile/$session"
                     EventChannel(pluginBinding?.binaryMessenger, channelName).setStreamHandler(streamHandler)
 

@@ -78,7 +78,7 @@ class _MyAppState extends State<MyApp> {
                                 Text(f.name ?? ''),
                                 _sep(),
                                 OutlinedButton(
-                                    onPressed: () => _readFile(f.uri),
+                                    onPressed: () => _readFileStream(f.uri),
                                     child: const Text('Read stream')),
                                 _sep(),
                                 OutlinedButton(
@@ -146,12 +146,12 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _readFile(Uri uri) async {
+  Future<void> _readFileStream(Uri uri) async {
     try {
       _clearOutput();
       var session = ++_session;
-      await for (var bytes
-          in await _safStreamPlugin.readFile(uri, bufferSize: 500 * 1024)) {
+      await for (var bytes in await _safStreamPlugin.readFileStream(uri,
+          bufferSize: 500 * 1024)) {
         setState(() {
           _output += '$session - <Bytes:${bytes.length}>\n';
         });

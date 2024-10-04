@@ -4,8 +4,9 @@ import 'saf_stream_platform_interface.dart';
 
 class SafStream {
   /// Reads the contents of a file from the given [uri] and returns a stream of bytes.
-  Future<Stream<Uint8List>> readFile(Uri uri, {int? bufferSize}) async {
-    return SafStreamPlatform.instance.readFile(uri, bufferSize: bufferSize);
+  Future<Stream<Uint8List>> readFileStream(Uri uri, {int? bufferSize}) async {
+    return SafStreamPlatform.instance
+        .readFileStream(uri, bufferSize: bufferSize);
   }
 
   /// Reads the contents of a file from the given [uri].
