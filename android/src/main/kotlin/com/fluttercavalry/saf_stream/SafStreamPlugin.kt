@@ -44,11 +44,12 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                 val fileUriStr = call.argument<String>("fileUri")!!
                 val session = call.argument<String>("session")!!
                 val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
+                val start = call.argument<Int>("start")
 
                 try {
                     val inStream = context.contentResolver.openInputStream(Uri.parse(fileUriStr))
                             ?: throw Exception("Stream creation failed")
-                    val streamHandler = ReadFileHandler(inStream, bufferSize)
+                    val streamHandler = ReadFileHandler(inStream, bufferSize, start)
                     val channelName = "saf_stream/readFile/$session"
                     EventChannel(pluginBinding?.binaryMessenger, channelName).setStreamHandler(streamHandler)
 
@@ -65,7 +66,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                 CoroutineScope(Dispatchers.IO).launch {
                     val inputStream = context.contentResolver.openInputStream(fileUriStr)
                     val outputStream = FileOutputStream(File(dest))
-                    outputStream?.use { inputStream?.copyTo(it) }
+                    outputStream.use { inputStream?.copyTo(it) }
                     inputStream?.close()
                     launch(Dispatchers.Main) {
                         result.success(null)
@@ -76,8 +77,26 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
             "readFileSync" -> {
                 val fileUriStr = Uri.parse(call.argument<String>("fileUri")!!)
+                val start = call.argument<Int>("start")
+                val count = call.argument<Int>("count")
+
                 CoroutineScope(Dispatchers.IO).launch {
-                    val bytes = context.contentResolver.openInputStream(fileUriStr)?.use { it.buffered().readBytes() }
+                    val bytes = context.contentResolver.openInputStream(fileUriStr)?.use {
+                        if (start != null) {
+                            it.skip(start.toLong())
+                        }
+                        if (count != null) {
+                            val buffer = ByteArray(count)
+                            val read = it.read(buffer, 0, count)
+                            if (read <= 0) {
+                                ByteArray(0)
+                            } else {
+                                buffer.copyOf(read)
+                            }
+                        } else {
+                            it.buffered().readBytes()
+                        }
+                    }
                     launch(Dispatchers.Main) {
                         result.success(bytes)
                     }
@@ -97,14 +116,14 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                             ?: throw Exception("Directory not found")
 
                     val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
-                    var inStream = FileInputStream(File(localSrc))
+                    val inStream = FileInputStream(File(localSrc))
 
                     val map = HashMap<String, Any?>()
                     map["uri"] = newFile.uri.toString()
                     map["fileName"] = newFile.name
 
                     CoroutineScope(Dispatchers.IO).launch {
-                        outStream?.use { inStream?.copyTo(it) }
+                        outStream.use { inStream.copyTo(it) }
                         launch(Dispatchers.Main) {
                             result.success(map)
                         }
@@ -133,7 +152,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                     map["fileName"] = newFile.name
 
                     CoroutineScope(Dispatchers.IO).launch {
-                        outStream?.use { it?.write(data) }
+                        outStream.use { it.write(data) }
                         launch(Dispatchers.Main) {
                             result.success(map)
                         }
@@ -171,9 +190,9 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                 try {
                     // Arguments are enforced on dart side.
                     val session = call.argument<String>("session")!!
-                    var data = call.argument<ByteArray>("data")!!
+                    val data = call.argument<ByteArray>("data")!!
 
-                    var outStream = writeStreams[session]
+                    val outStream = writeStreams[session]
                     if (outStream == null) {
                         result.error("WriteChunk", "Stream not found", null)
                         return
@@ -244,7 +263,8 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
 class ReadFileHandler constructor(
         val inStream: InputStream,
-        val bufferSize: Int
+        val bufferSize: Int,
+        val start: Int?
 ) : EventChannel.StreamHandler {
     private var eventSink: EventChannel.EventSink? = null
 
@@ -254,9 +274,12 @@ class ReadFileHandler constructor(
             try {
                 val buffer = ByteArray(bufferSize)
                 inStream.use { stream ->
+                    if (start != null) {
+                        stream.skip(start.toLong())
+                    }
                     var rc: Int = stream.read(buffer)
                     while (rc != -1) {
-                        var chunk = buffer.copyOf(rc)
+                        val chunk = buffer.copyOf(rc)
                         launch(Dispatchers.Main) { sink.success(chunk) }
                         rc = stream.read(buffer)
                     }

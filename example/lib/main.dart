@@ -166,7 +166,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _readFileSync(Uri uri) async {
+  Future<void> _readFileSync(Uri uri, {int? start, int? count}) async {
     try {
       _clearOutput();
       var session = ++_session;

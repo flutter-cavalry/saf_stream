@@ -1,3 +1,7 @@
+## 0.8.0
+
+- Add `start` and `count` params to `readFileSync` and `readFileStream`.
+
 ## 0.7.5
 
 - Fix issues when overwriting file contents

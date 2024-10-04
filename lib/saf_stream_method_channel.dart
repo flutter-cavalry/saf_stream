@@ -12,13 +12,15 @@ class MethodChannelSafStream extends SafStreamPlatform {
   var _session = 0;
 
   @override
-  Future<Stream<Uint8List>> readFileStream(Uri uri, {int? bufferSize}) async {
+  Future<Stream<Uint8List>> readFileStream(Uri uri,
+      {int? bufferSize, int? start}) async {
     var session = _nextSession();
     var channelName =
         await methodChannel.invokeMethod<String>('readFileStream', {
       'fileUri': uri.toString(),
       'session': session.toString(),
-      'bufferSize': bufferSize
+      'bufferSize': bufferSize,
+      'start': start,
     });
     if (channelName == null) {
       throw Exception('Unexpected empty channel name from `readFile`');
@@ -28,9 +30,20 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
-  Future<Uint8List> readFileSync(Uri uri) async {
+  Future<Uint8List> readFileSync(Uri uri, {int? start, int? count}) async {
+    if (start != null && count == null) {
+      throw ArgumentError('`count` must be provided if `start` is provided');
+    }
+    if (count != null) {
+      if (count <= 0) {
+        throw ArgumentError('`count` must be greater than 0');
+      }
+      start ??= 0;
+    }
     final res = await methodChannel.invokeMethod<Uint8List>('readFileSync', {
       'fileUri': uri.toString(),
+      'start': start,
+      'count': count,
     });
     if (res == null) {
       throw Exception('Unexpected empty response from `readFileSync`');
