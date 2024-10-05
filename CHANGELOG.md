@@ -1,3 +1,7 @@
+## 0.8.1
+
+- Fix some threading issues.
+
 ## 0.8.0
 
 - Add `start` and `count` params to `readFileSync` and `readFileStream`.

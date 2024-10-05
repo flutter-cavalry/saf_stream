@@ -40,30 +40,43 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
             "readFileStream" -> {
-                // Arguments are enforced on dart side.
-                val fileUriStr = call.argument<String>("fileUri")!!
-                val session = call.argument<String>("session")!!
-                val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
-                val start = call.argument<Int>("start")
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        // Arguments are enforced on dart side.
+                        val fileUriStr = call.argument<String>("fileUri")!!
+                        val session = call.argument<String>("session")!!
+                        val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
+                        val start = call.argument<Int>("start")
 
-                try {
-                    val inStream = context.contentResolver.openInputStream(Uri.parse(fileUriStr))
-                            ?: throw Exception("Stream creation failed")
-                    val streamHandler = ReadFileHandler(inStream, bufferSize, start)
-                    val channelName = "saf_stream/readFile/$session"
-                    EventChannel(pluginBinding?.binaryMessenger, channelName).setStreamHandler(streamHandler)
 
-                    result.success(channelName)
-                } catch (err: Exception) {
-                    result.error("ReadFileError", err.message, null)
+                        val inStream =
+                            context.contentResolver.openInputStream(Uri.parse(fileUriStr))
+                                ?: throw Exception("Stream creation failed")
+                        launch(Dispatchers.Main) {
+                            val streamHandler = ReadFileHandler(inStream, bufferSize, start)
+                            val channelName = "saf_stream/readFile/$session"
+                            EventChannel(
+                                pluginBinding?.binaryMessenger,
+                                channelName
+                            ).setStreamHandler(
+                                streamHandler
+                            )
+
+                            result.success(channelName)
+                        }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("ReadFileError", err.message, null)
+                        }
+                    }
                 }
             }
 
             "copyToLocalFile" -> {
-                val fileUriStr = Uri.parse(call.argument<String>("src")!!)
-                val dest = call.argument<String>("dest")!!
-
                 CoroutineScope(Dispatchers.IO).launch {
+                    val fileUriStr = Uri.parse(call.argument<String>("src")!!)
+                    val dest = call.argument<String>("dest")!!
+
                     val inputStream = context.contentResolver.openInputStream(fileUriStr)
                     val outputStream = FileOutputStream(File(dest))
                     outputStream.use { inputStream?.copyTo(it) }
@@ -76,11 +89,11 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
 
             "readFileSync" -> {
-                val fileUriStr = Uri.parse(call.argument<String>("fileUri")!!)
-                val start = call.argument<Int>("start")
-                val count = call.argument<Int>("count")
-
                 CoroutineScope(Dispatchers.IO).launch {
+                    val fileUriStr = Uri.parse(call.argument<String>("fileUri")!!)
+                    val start = call.argument<Int>("start")
+                    val count = call.argument<Int>("count")
+
                     val bytes = context.contentResolver.openInputStream(fileUriStr)?.use {
                         if (start != null) {
                             it.skip(start.toLong())
@@ -104,124 +117,123 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
             }
 
             "pasteLocalFile" -> {
-                try {
-                    // Arguments are enforced on dart side.
-                    val treeUriStr = call.argument<String>("treeUri")!!
-                    val fileName = call.argument<String>("fileName")!!
-                    val mime = call.argument<String>("mime")!!
-                    val localSrc = call.argument<String>("localSrc")!!
-                    val overwrite = call.argument<Boolean>("overwrite")!!
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        // Arguments are enforced on dart side.
+                        val treeUriStr = call.argument<String>("treeUri")!!
+                        val fileName = call.argument<String>("fileName")!!
+                        val mime = call.argument<String>("mime")!!
+                        val localSrc = call.argument<String>("localSrc")!!
+                        val overwrite = call.argument<Boolean>("overwrite")!!
 
-                    val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
+                        val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
 
-                    val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
-                    val inStream = FileInputStream(File(localSrc))
+                        val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
+                        val inStream = FileInputStream(File(localSrc))
 
-                    val map = HashMap<String, Any?>()
-                    map["uri"] = newFile.uri.toString()
-                    map["fileName"] = newFile.name
+                        val map = HashMap<String, Any?>()
+                        map["uri"] = newFile.uri.toString()
+                        map["fileName"] = newFile.name
 
-                    CoroutineScope(Dispatchers.IO).launch {
                         outStream.use { inStream.copyTo(it) }
                         launch(Dispatchers.Main) {
                             result.success(map)
                         }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("StartWriteStream", err.message, null)
+                        }
                     }
-                } catch (err: Exception) {
-                    result.error("StartWriteStream", err.message, null)
                 }
             }
 
             "writeFileSync" -> {
-                try {
-                    // Arguments are enforced on dart side.
-                    val treeUriStr = call.argument<String>("treeUri")!!
-                    val fileName = call.argument<String>("fileName")!!
-                    val mime = call.argument<String>("mime")!!
-                    val data = call.argument<ByteArray>("data")!!
-                    val overwrite = call.argument<Boolean>("overwrite")!!
-
-                    val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val treeUriStr = call.argument<String>("treeUri")!!
+                        val fileName = call.argument<String>("fileName")!!
+                        val mime = call.argument<String>("mime")!!
+                        val data = call.argument<ByteArray>("data")!!
+                        val overwrite = call.argument<Boolean>("overwrite")!!
+                        val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
 
-                    val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
+                        val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
 
-                    val map = HashMap<String, Any?>()
-                    map["uri"] = newFile.uri.toString()
-                    map["fileName"] = newFile.name
+                        val map = HashMap<String, Any?>()
+                        map["uri"] = newFile.uri.toString()
+                        map["fileName"] = newFile.name
 
-                    CoroutineScope(Dispatchers.IO).launch {
                         outStream.use { it.write(data) }
                         launch(Dispatchers.Main) {
                             result.success(map)
                         }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("StartWriteStream", err.message, null)
+                        }
                     }
-                } catch (err: Exception) {
-                    result.error("StartWriteStream", err.message, null)
                 }
             }
 
             "startWriteStream" -> {
-                try {
-                    // Arguments are enforced on dart side.
-                    val treeUriStr = call.argument<String>("treeUri")!!
-                    val fileName = call.argument<String>("fileName")!!
-                    val mime = call.argument<String>("mime")!!
-                    val session = call.argument<String>("session")!!
-                    val overwrite = call.argument<Boolean>("overwrite")!!
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        // Arguments are enforced on dart side.
+                        val treeUriStr = call.argument<String>("treeUri")!!
+                        val fileName = call.argument<String>("fileName")!!
+                        val mime = call.argument<String>("mime")!!
+                        val session = call.argument<String>("session")!!
+                        val overwrite = call.argument<Boolean>("overwrite")!!
 
-                    val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
+                        val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
-                    val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
+                        val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
 
-                    writeStreams[session] = outStream
+                        val map = HashMap<String, Any?>()
+                        map["uri"] = newFile.uri.toString()
+                        map["fileName"] = newFile.name
 
-                    val map = HashMap<String, Any?>()
-                    map["uri"] = newFile.uri.toString()
-                    map["fileName"] = newFile.name
-                    result.success(map)
-                } catch (err: Exception) {
-                    result.error("StartWriteStream", err.message, null)
+                        launch(Dispatchers.Main) {
+                            // Access `writeStreams` in main thread.
+                            writeStreams[session] = outStream
+                            result.success(map)
+                        }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("StartWriteStream", err.message, null)
+                        }
+                    }
                 }
             }
 
             "writeChunk" -> {
-                try {
-                    // Arguments are enforced on dart side.
-                    val session = call.argument<String>("session")!!
-                    val data = call.argument<ByteArray>("data")!!
-
-                    val outStream = writeStreams[session]
-                    if (outStream == null) {
-                        result.error("WriteChunk", "Stream not found", null)
-                        return
-                    }
-
+                val session = call.argument<String>("session")!!
+                // Access `writeStreams` in main thread.
+                val outStream = writeStreams[session]
+                if (outStream == null) {
+                    result.error("WriteChunk", "Stream not found", null)
+                } else {
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
+                            val data = call.argument<ByteArray>("data")!!
                             outStream.write(data)
                             launch(Dispatchers.Main) { result.success(null) }
                         } catch (err: Exception) {
-                            launch(Dispatchers.Main) { result.error("WriteFileChunkError", err.message, null) }
+                            result.error("WriteChunk", err.message, null)
                         }
                     }
-                } catch (err: Exception) {
-                    result.error("WriteChunk", err.message, null)
                 }
             }
 
             "endWriteStream" -> {
-                try {
-                    // Arguments are enforced on dart side.
-                    val session = call.argument<String>("session")!!
-
-                    val outStream = writeStreams[session]
-                    if (outStream == null) {
-                        result.error("EndWriteStream", "Stream not found", null)
-                        return
-                    }
-
+                val session = call.argument<String>("session")!!
+                // Access `writeStreams` in main thread.
+                val outStream = writeStreams[session]
+                if (outStream == null) {
+                    result.error("WriteChunk", "Stream not found", null)
+                } else {
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
                             outStream.close()
@@ -230,8 +242,6 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                             launch(Dispatchers.Main) { result.error("CloseWriteStreamError", err.message, null) }
                         }
                     }
-                } catch (err: Exception) {
-                    result.error("EndWriteStream", err.message, null)
                 }
             }
 
