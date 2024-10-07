@@ -169,15 +169,15 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.8.1"
+    version: "0.9.0"
   saf_util:
     dependency: "direct main"
     description:
       name: saf_util
-      sha256: "8b9cb246922582c8478622dcbad9fbe39048f42b79f3c3b1e1c0e3ea5a357950"
+      sha256: c1141f5b524af2a28bcc1ab4c2597f3f396d84f04771535a49d7b77fceb90a70
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.1"
+    version: "0.1.0"
   sky_engine:
     dependency: transitive
     description: flutter
