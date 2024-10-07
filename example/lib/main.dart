@@ -4,9 +4,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'dart:async';
-
-import 'package:mg_shared_storage/shared_storage.dart' as saf;
 import 'package:saf_stream/saf_stream.dart';
+import 'package:saf_util/saf_util.dart';
+import 'package:saf_util/saf_util_platform_interface.dart';
 import 'package:tmp_path/tmp_path.dart';
 
 void main() {
@@ -21,9 +21,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final _safUtil = SafUtil();
   final _safStreamPlugin = SafStream();
-  List<saf.DocumentFile> _files = [];
-  Uri? _treeUri;
+  List<SafDocumentFile> _files = [];
+  String? _treeUri;
   String _output = '';
   int _session = 0;
 
@@ -68,14 +69,14 @@ class _MyAppState extends State<MyApp> {
                       OutlinedButton(
                           onPressed: () => _writeFileSync(true),
                           child: const Text('Write a.bin sync (overwrite)')),
-                      ...(_files.where((f) => f.isFile == true).map((f) =>
+                      ...(_files.where((f) => !f.isDir == true).map((f) =>
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                                 border: Border.all(color: Colors.grey)),
                             child: Column(
                               children: [
-                                Text(f.name ?? ''),
+                                Text(f.name),
                                 _sep(),
                                 OutlinedButton(
                                     onPressed: () => _readFileStream(f.uri),
@@ -111,15 +112,7 @@ class _MyAppState extends State<MyApp> {
       if (_treeUri == null) {
         return;
       }
-      const List<saf.DocumentFileColumn> columns = <saf.DocumentFileColumn>[
-        saf.DocumentFileColumn.displayName,
-        saf.DocumentFileColumn.size,
-        saf.DocumentFileColumn.lastModified,
-        saf.DocumentFileColumn
-            .id, // Optional column, will be available/queried regardless if is or not included here
-        saf.DocumentFileColumn.mimeType,
-      ];
-      var files = await saf.listFiles(_treeUri!, columns: columns).toList();
+      var files = await _safUtil.list(_treeUri!);
       setState(() {
         _files = files;
         _output = '';
@@ -133,7 +126,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _selectFolder() async {
     try {
-      var treeUri = await saf.openDocumentTree(persistablePermission: false);
+      var treeUri = await _safUtil.openDirectory();
       if (treeUri == null) {
         return;
       }
@@ -146,7 +139,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _readFileStream(Uri uri) async {
+  Future<void> _readFileStream(String uri) async {
     try {
       _clearOutput();
       var session = ++_session;
@@ -166,7 +159,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _readFileSync(Uri uri, {int? start, int? count}) async {
+  Future<void> _readFileSync(String uri) async {
     try {
       _clearOutput();
       var session = ++_session;
@@ -187,7 +180,7 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> _copyToLocalFile(Uri uri) async {
+  Future<void> _copyToLocalFile(String uri) async {
     try {
       _clearOutput();
       final dest = tmpPath();

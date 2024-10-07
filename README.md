@@ -8,13 +8,13 @@ Read and write Android SAF `DocumentFile` with streams. Min SDK version: **API 2
 
 ```dart
 /// Reads the contents of a file from the given [uri] and returns a stream of bytes.
-Future<Stream<Uint8List>> readFileStream(Uri uri, {int? bufferSize, int? start});
+Future<Stream<Uint8List>> readFileStream(String uri, {int? bufferSize, int? start});
 
 /// Reads the contents of a file from the given [uri].
-Future<Uint8List> readFileSync(Uri uri, {int? start, int? count});
+Future<Uint8List> readFileSync(String uri, {int? start, int? count});
 
 /// Copies a file from the given [uri] to a local file [dest].
-Future<void> copyToLocalFile(Uri src, String dest);
+Future<void> copyToLocalFile(String src, String dest);
 
 /// Copies the contents of a local file [localSrc] and creates a new file
 /// from the given [treeUri], [fileName] and [mime].

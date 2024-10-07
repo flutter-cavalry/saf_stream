@@ -4,20 +4,20 @@ import 'saf_stream_platform_interface.dart';
 
 class SafStream {
   /// Reads the contents of a file from the given [uri] and returns a stream of bytes.
-  Future<Stream<Uint8List>> readFileStream(Uri uri,
+  Future<Stream<Uint8List>> readFileStream(String uri,
       {int? bufferSize, int? start}) async {
     return SafStreamPlatform.instance
         .readFileStream(uri, bufferSize: bufferSize, start: start);
   }
 
   /// Reads the contents of a file from the given [uri].
-  Future<Uint8List> readFileSync(Uri uri, {int? start, int? count}) async {
+  Future<Uint8List> readFileSync(String uri, {int? start, int? count}) async {
     return SafStreamPlatform.instance
         .readFileSync(uri, start: start, count: count);
   }
 
   /// Copies a file from the given [uri] to a local file [dest].
-  Future<void> copyToLocalFile(Uri src, String dest) async {
+  Future<void> copyToLocalFile(String src, String dest) async {
     return SafStreamPlatform.instance.copyToLocalFile(src, dest);
   }
 
@@ -25,7 +25,7 @@ class SafStream {
   /// from the given [treeUri], [fileName] and [mime].
   /// Returns the Uri of the created file.
   Future<SafNewFile> pasteLocalFile(
-      String localSrc, Uri treeUri, String fileName, String mime,
+      String localSrc, String treeUri, String fileName, String mime,
       {bool? overwrite}) async {
     return SafStreamPlatform.instance.pasteLocalFile(
         localSrc, treeUri, fileName, mime,
@@ -34,7 +34,7 @@ class SafStream {
 
   /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
   Future<SafNewFile> writeFileSync(
-      Uri treeUri, String fileName, String mime, Uint8List data,
+      String treeUri, String fileName, String mime, Uint8List data,
       {bool? overwrite}) async {
     return SafStreamPlatform.instance
         .writeFileSync(treeUri, fileName, mime, data, overwrite: overwrite);
@@ -43,7 +43,7 @@ class SafStream {
   /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]
   /// to write data into the destination stream. Call [endWriteStream] to close the destination stream.
   Future<SafWriteStreamInfo> startWriteStream(
-      Uri treeUri, String fileName, String mime,
+      String treeUri, String fileName, String mime,
       {bool? overwrite}) async {
     return SafStreamPlatform.instance
         .startWriteStream(treeUri, fileName, mime, overwrite: overwrite);

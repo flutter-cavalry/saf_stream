@@ -12,7 +12,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
   var _session = 0;
 
   @override
-  Future<Stream<Uint8List>> readFileStream(Uri uri,
+  Future<Stream<Uint8List>> readFileStream(String uri,
       {int? bufferSize, int? start}) async {
     var session = _nextSession();
     var channelName =
@@ -30,7 +30,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
-  Future<Uint8List> readFileSync(Uri uri, {int? start, int? count}) async {
+  Future<Uint8List> readFileSync(String uri, {int? start, int? count}) async {
     if (start != null && count == null) {
       throw ArgumentError('`count` must be provided if `start` is provided');
     }
@@ -52,7 +52,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
-  Future<void> copyToLocalFile(Uri src, String dest) async {
+  Future<void> copyToLocalFile(String src, String dest) async {
     await methodChannel.invokeMethod<String>('copyToLocalFile', {
       'src': src.toString(),
       'dest': dest,
@@ -61,7 +61,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafNewFile> pasteLocalFile(
-      String localSrc, Uri treeUri, String fileName, String mime,
+      String localSrc, String treeUri, String fileName, String mime,
       {bool? overwrite}) async {
     var map =
         await methodChannel.invokeMapMethod<String, dynamic>('pasteLocalFile', {
@@ -79,7 +79,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafNewFile> writeFileSync(
-      Uri treeUri, String fileName, String mime, Uint8List data,
+      String treeUri, String fileName, String mime, Uint8List data,
       {bool? overwrite}) async {
     var map =
         await methodChannel.invokeMapMethod<String, dynamic>('writeFileSync', {
@@ -97,7 +97,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafWriteStreamInfo> startWriteStream(
-      Uri treeUri, String fileName, String mime,
+      String treeUri, String fileName, String mime,
       {bool? overwrite}) async {
     var session = _nextSession().toString();
     var map = await methodChannel
