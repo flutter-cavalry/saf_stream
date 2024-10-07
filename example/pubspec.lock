@@ -174,10 +174,10 @@ packages:
     dependency: "direct main"
     description:
       name: saf_util
-      sha256: c1141f5b524af2a28bcc1ab4c2597f3f396d84f04771535a49d7b77fceb90a70
+      sha256: d2bd729d9ad6dbd6d6e82cca4e1372a863244fa2c8363bf8779019968eb33c1d
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.0"
+    version: "0.1.1"
   sky_engine:
     dependency: transitive
     description: flutter

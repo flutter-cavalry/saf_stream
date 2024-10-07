@@ -217,7 +217,7 @@ class _MyAppState extends State<MyApp> {
           _output += '$session - <Writing chunk ${i + 1}>\n';
         });
         await _safStreamPlugin.writeChunk(
-            info.session, Uint8List.fromList(utf8.encode(i.toString())));
+            info.session, utf8.encode(i.toString()));
         await Future<void>.delayed(const Duration(seconds: 1));
       }
       await _safStreamPlugin.endWriteStream(info.session);
