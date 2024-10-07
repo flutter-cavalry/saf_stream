@@ -1,3 +1,8 @@
+## 0.9.0
+
+- Migrate from `mg_shared_storage` to `saf_util`.
+- Update to Gradle 8
+
 ## 0.8.1
 
 - Fix some threading issues.
