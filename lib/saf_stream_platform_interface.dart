@@ -75,12 +75,12 @@ abstract class SafStreamPlatform extends PlatformInterface {
     throw UnimplementedError('readFileSync() has not been implemented.');
   }
 
-  Future<void> copyToLocalFile(String src, String dest) async {
+  Future<void> copyToLocalFile(String srcUri, String destPath) async {
     throw UnimplementedError('copyToLocalFile() has not been implemented.');
   }
 
   Future<SafNewFile> pasteLocalFile(
-      String localSrc, String treeUri, String fileName, String mime,
+      String srcPath, String treeUri, String fileName, String mime,
       {bool? overwrite}) async {
     throw UnimplementedError('pasteLocalFile() has not been implemented.');
   }

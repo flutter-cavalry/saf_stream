@@ -52,20 +52,20 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
-  Future<void> copyToLocalFile(String src, String dest) async {
+  Future<void> copyToLocalFile(String srcUri, String destPath) async {
     await methodChannel.invokeMethod<String>('copyToLocalFile', {
-      'src': src.toString(),
-      'dest': dest,
+      'src': srcUri.toString(),
+      'dest': destPath,
     });
   }
 
   @override
   Future<SafNewFile> pasteLocalFile(
-      String localSrc, String treeUri, String fileName, String mime,
+      String srcPath, String treeUri, String fileName, String mime,
       {bool? overwrite}) async {
     var map =
         await methodChannel.invokeMapMethod<String, dynamic>('pasteLocalFile', {
-      'localSrc': localSrc,
+      'localSrc': srcPath,
       'treeUri': treeUri.toString(),
       'fileName': fileName,
       'mime': mime,

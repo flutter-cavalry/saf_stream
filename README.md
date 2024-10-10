@@ -17,32 +17,44 @@ class SafStream {
   Future<Stream<Uint8List>> readFileStream(String uri,
       {int? bufferSize, int? start});
 
-  /// Reads the contents of a file from the given [uri].
+  /// Reads the contents of a file from the given [uri]. Unlike [readFileStream],
+  /// this method reads the entire file at once and returns a [Uint8List].
   ///
   /// If [start] and [count] are provided, reads [count] bytes starting from [start].
   Future<Uint8List> readFileSync(String uri, {int? start, int? count});
 
-  /// Copies a file from the given [src] to a local file [dest].
-  Future<void> copyToLocalFile(String src, String dest);
+  /// Copies a SAF file from the given [srcUri] to a local file [destPath].
+  Future<void> copyToLocalFile(String srcUri, String destPath);
 
-  /// Copies the contents of a local file [localSrc] and creates a new file
+  /// Copies the contents of a local file [srcPath] and creates a new file
   /// from the given [treeUri], [fileName] and [mime].
-  /// Returns the Uri of the created file.
+  ///
+  /// Returns a [SafNewFile], which contains the Uri and file name of newly created file.
   ///
   /// If [overwrite] is true, the file will be overwritten if it already exists.
+  /// If [overwrite] is false and a file with the same name already exists, a new name
+  /// will be generated and returned in the resulting [SafNewFile].
   Future<SafNewFile> pasteLocalFile(
-      String localSrc, String treeUri, String fileName, String mime,
+      String srcPath, String treeUri, String fileName, String mime,
       {bool? overwrite});
 
   /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
   ///
+  /// Returns a [SafNewFile], which contains the Uri and file name of newly created file.
+  ///
   /// If [overwrite] is true, the file will be overwritten if it already exists.
+  /// If [overwrite] is false and a file with the same name already exists, a new name
+  /// will be generated and returned in the resulting [SafNewFile].
   Future<SafNewFile> writeFileSync(
       String treeUri, String fileName, String mime, Uint8List data,
       {bool? overwrite});
 
   /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]
   /// to write data into the destination stream. Call [endWriteStream] to close the destination stream.
+  ///
+  /// If [overwrite] is true, the file will be overwritten if it already exists.
+  /// If [overwrite] is false and a file with the same name already exists, a new name
+  /// will be generated and returned in the resulting [SafWriteStreamInfo].
   Future<SafWriteStreamInfo> startWriteStream(
       String treeUri, String fileName, String mime,
       {bool? overwrite});
@@ -63,11 +75,11 @@ import 'package:saf_stream/saf_stream.dart';
 final _safStreamPlugin = SafStream();
 
 // Read a file.
-Uri fileUri = '...';
+String fileUri = '...';
 Stream<List<int>> fileStream = await _safStreamPlugin.readFileStream(uri);
 
 // Write a file.
-Uri treeUri = '...';
+String treeUri = '...';
 // Create a session.
 final info = await _safStreamPlugin.startWriteStream(treeUri, 'myFile.txt', 'text/plain');
 final sessionID = info.session;
