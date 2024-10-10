@@ -4,6 +4,8 @@
 
 Read and write Android SAF `DocumentFile` with streams. Min SDK version: **API 21**.
 
+> For other SAF APIs, see [saf_util](https://github.com/flutter-cavalry/saf_util)
+
 ## Usage
 
 ```dart
