@@ -30,7 +30,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
-  Future<Uint8List> readFileSync(String uri, {int? start, int? count}) async {
+  Future<Uint8List> readFileBytes(String uri, {int? start, int? count}) async {
     if (start != null && count == null) {
       throw ArgumentError('`count` must be provided if `start` is provided');
     }
@@ -40,13 +40,13 @@ class MethodChannelSafStream extends SafStreamPlatform {
       }
       start ??= 0;
     }
-    final res = await methodChannel.invokeMethod<Uint8List>('readFileSync', {
+    final res = await methodChannel.invokeMethod<Uint8List>('readFileBytes', {
       'fileUri': uri.toString(),
       'start': start,
       'count': count,
     });
     if (res == null) {
-      throw Exception('Unexpected empty response from `readFileSync`');
+      throw Exception('Unexpected empty response from `readFileBytes`');
     }
     return res;
   }
@@ -78,11 +78,11 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
-  Future<SafNewFile> writeFileSync(
+  Future<SafNewFile> writeFileBytes(
       String treeUri, String fileName, String mime, Uint8List data,
       {bool? overwrite}) async {
     var map =
-        await methodChannel.invokeMapMethod<String, dynamic>('writeFileSync', {
+        await methodChannel.invokeMapMethod<String, dynamic>('writeFileBytes', {
       'treeUri': treeUri.toString(),
       'fileName': fileName,
       'mime': mime,
@@ -90,7 +90,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
       'overwrite': overwrite ?? false,
     });
     if (map == null) {
-      throw Exception('Unexpected empty response from `writeFileSync`');
+      throw Exception('Unexpected empty response from `writeFileBytes`');
     }
     return SafNewFile.fromMap(map);
   }

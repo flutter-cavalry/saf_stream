@@ -64,10 +64,10 @@ class _MyAppState extends State<MyApp> {
                           child: const Text(
                               'Create a.bin from local file (pasteLocalFile) (overwrite)')),
                       OutlinedButton(
-                          onPressed: () => _writeFileSync(false),
+                          onPressed: () => _writeFileBytes(false),
                           child: const Text('Write a.bin sync')),
                       OutlinedButton(
-                          onPressed: () => _writeFileSync(true),
+                          onPressed: () => _writeFileBytes(true),
                           child: const Text('Write a.bin sync (overwrite)')),
                       ...(_files.where((f) => !f.isDir == true).map((f) =>
                           Container(
@@ -83,7 +83,7 @@ class _MyAppState extends State<MyApp> {
                                     child: const Text('Read stream')),
                                 _sep(),
                                 OutlinedButton(
-                                    onPressed: () => _readFileSync(f.uri),
+                                    onPressed: () => _readFileBytes(f.uri),
                                     child: const Text('Read sync')),
                                 _sep(),
                                 OutlinedButton(
@@ -159,11 +159,11 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _readFileSync(String uri) async {
+  Future<void> _readFileBytes(String uri) async {
     try {
       _clearOutput();
       var session = ++_session;
-      final bytes = await _safStreamPlugin.readFileSync(uri);
+      final bytes = await _safStreamPlugin.readFileBytes(uri);
       setState(() {
         _output += '$session - Bytes: ${bytes.lengthInBytes} \n';
       });
@@ -255,7 +255,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _writeFileSync(bool overwrite) async {
+  Future<void> _writeFileBytes(bool overwrite) async {
     try {
       _clearOutput();
       var treeUri = _treeUri;
@@ -263,7 +263,7 @@ class _MyAppState extends State<MyApp> {
         return;
       }
 
-      final info = await _safStreamPlugin.writeFileSync(
+      final info = await _safStreamPlugin.writeFileBytes(
           treeUri,
           'a.bin',
           'application/octet-stream',

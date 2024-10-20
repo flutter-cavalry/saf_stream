@@ -17,9 +17,20 @@ class SafStream {
   /// this method reads the entire file at once and returns a [Uint8List].
   ///
   /// If [start] and [count] are provided, reads [count] bytes starting from [start].
+  Future<Uint8List> readFileBytes(String uri, {int? start, int? count}) async {
+    return SafStreamPlatform.instance
+        .readFileBytes(uri, start: start, count: count);
+  }
+
+  /// Reads the contents of a file from the given [uri]. Unlike [readFileStream],
+  /// this method reads the entire file at once and returns a [Uint8List].
+  ///
+  /// If [start] and [count] are provided, reads [count] bytes starting from [start].
+  @Deprecated(
+      'Use [readFileBytes] instead. It is the same method with a different name. The [readFileSync] is confusing because it is not synchronous.')
   Future<Uint8List> readFileSync(String uri, {int? start, int? count}) async {
     return SafStreamPlatform.instance
-        .readFileSync(uri, start: start, count: count);
+        .readFileBytes(uri, start: start, count: count);
   }
 
   /// Copies a SAF file from the given [srcUri] to a local file [destPath].
@@ -49,11 +60,27 @@ class SafStream {
   /// If [overwrite] is true, the file will be overwritten if it already exists.
   /// If [overwrite] is false and a file with the same name already exists, a new name
   /// will be generated and returned in the resulting [SafNewFile].
+  Future<SafNewFile> writeFileBytes(
+      String treeUri, String fileName, String mime, Uint8List data,
+      {bool? overwrite}) async {
+    return SafStreamPlatform.instance
+        .writeFileBytes(treeUri, fileName, mime, data, overwrite: overwrite);
+  }
+
+  /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
+  ///
+  /// Returns a [SafNewFile], which contains the Uri and file name of newly created file.
+  ///
+  /// If [overwrite] is true, the file will be overwritten if it already exists.
+  /// If [overwrite] is false and a file with the same name already exists, a new name
+  /// will be generated and returned in the resulting [SafNewFile].
+  @Deprecated(
+      'Use [writeFileBytes] instead. It is the same method with a different name. The [writeFileSync] is confusing because it is not synchronous.')
   Future<SafNewFile> writeFileSync(
       String treeUri, String fileName, String mime, Uint8List data,
       {bool? overwrite}) async {
     return SafStreamPlatform.instance
-        .writeFileSync(treeUri, fileName, mime, data, overwrite: overwrite);
+        .writeFileBytes(treeUri, fileName, mime, data, overwrite: overwrite);
   }
 
   /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]

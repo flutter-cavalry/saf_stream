@@ -21,7 +21,7 @@ class SafStream {
   /// this method reads the entire file at once and returns a [Uint8List].
   ///
   /// If [start] and [count] are provided, reads [count] bytes starting from [start].
-  Future<Uint8List> readFileSync(String uri, {int? start, int? count});
+  Future<Uint8List> readFileBytes(String uri, {int? start, int? count});
 
   /// Copies a SAF file from the given [srcUri] to a local file [destPath].
   Future<void> copyToLocalFile(String srcUri, String destPath);
@@ -45,7 +45,7 @@ class SafStream {
   /// If [overwrite] is true, the file will be overwritten if it already exists.
   /// If [overwrite] is false and a file with the same name already exists, a new name
   /// will be generated and returned in the resulting [SafNewFile].
-  Future<SafNewFile> writeFileSync(
+  Future<SafNewFile> writeFileBytes(
       String treeUri, String fileName, String mime, Uint8List data,
       {bool? overwrite});
 

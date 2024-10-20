@@ -71,8 +71,8 @@ abstract class SafStreamPlatform extends PlatformInterface {
     throw UnimplementedError('readFileStream() has not been implemented.');
   }
 
-  Future<Uint8List> readFileSync(String uri, {int? start, int? count}) async {
-    throw UnimplementedError('readFileSync() has not been implemented.');
+  Future<Uint8List> readFileBytes(String uri, {int? start, int? count}) async {
+    throw UnimplementedError('readFileBytes() has not been implemented.');
   }
 
   Future<void> copyToLocalFile(String srcUri, String destPath) async {
@@ -85,10 +85,10 @@ abstract class SafStreamPlatform extends PlatformInterface {
     throw UnimplementedError('pasteLocalFile() has not been implemented.');
   }
 
-  Future<SafNewFile> writeFileSync(
+  Future<SafNewFile> writeFileBytes(
       String treeUri, String fileName, String mime, Uint8List data,
       {bool? overwrite}) async {
-    throw UnimplementedError('writeFileSync() has not been implemented.');
+    throw UnimplementedError('writeFileBytes() has not been implemented.');
   }
 
   Future<SafWriteStreamInfo> startWriteStream(

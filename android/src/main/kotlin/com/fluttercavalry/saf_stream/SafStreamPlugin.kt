@@ -88,7 +88,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
             }
 
 
-            "readFileSync" -> {
+            "readFileBytes" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     val fileUriStr = Uri.parse(call.argument<String>("fileUri")!!)
                     val start = call.argument<Int>("start")
@@ -148,7 +148,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                 }
             }
 
-            "writeFileSync" -> {
+            "writeFileBytes" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         val treeUriStr = call.argument<String>("treeUri")!!
