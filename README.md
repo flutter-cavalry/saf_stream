@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/saf_stream.svg)](https://pub.dev/packages/saf_stream)
 
-Read and write Android SAF `DocumentFile` with streams. Min SDK version: **API 21**.
+Read and write Android SAF `DocumentFile`. Min SDK version: **API 21**.
 
 > For other SAF APIs, see [saf_util](https://github.com/flutter-cavalry/saf_util)
 
