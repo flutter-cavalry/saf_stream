@@ -44,6 +44,8 @@ class _MyAppState extends State<MyApp> {
                     child: const Text('Select a folder'))
                 : Column(
                     children: [
+                      Text(_output),
+                      _sep(),
                       OutlinedButton(
                           onPressed: _reload, child: const Text('Reload')),
                       OutlinedButton(
@@ -65,10 +67,10 @@ class _MyAppState extends State<MyApp> {
                               'Create a.bin from local file (pasteLocalFile) (overwrite)')),
                       OutlinedButton(
                           onPressed: () => _writeFileBytes(false),
-                          child: const Text('Write a.bin sync')),
+                          child: const Text('Write a.bin bytes')),
                       OutlinedButton(
                           onPressed: () => _writeFileBytes(true),
-                          child: const Text('Write a.bin sync (overwrite)')),
+                          child: const Text('Write a.bin bytes (overwrite)')),
                       ...(_files.where((f) => !f.isDir == true).map((f) =>
                           Container(
                             padding: const EdgeInsets.all(8),
@@ -84,7 +86,7 @@ class _MyAppState extends State<MyApp> {
                                 _sep(),
                                 OutlinedButton(
                                     onPressed: () => _readFileBytes(f.uri),
-                                    child: const Text('Read sync')),
+                                    child: const Text('Read bytes')),
                                 _sep(),
                                 OutlinedButton(
                                     onPressed: () => _copyToLocalFile(f.uri),
@@ -93,8 +95,6 @@ class _MyAppState extends State<MyApp> {
                             ),
                           ))),
                       const SizedBox(width: 10),
-                      _sep(),
-                      Text(_output)
                     ],
                   ),
           ),
