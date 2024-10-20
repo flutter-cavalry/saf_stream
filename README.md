@@ -8,6 +8,12 @@ Read and write Android SAF `DocumentFile` with streams. Min SDK version: **API 2
 
 ## Usage
 
+|                     | Read              | Write             | Description                                          |
+| ------------------- | ----------------- | ----------------- | ---------------------------------------------------- |
+| Bytes (`Uint8List`) | `readFileBytes`   | `writeFileBytes`  | Good for small files or when memory is not a concern |
+| Streams             | `readFileStream`  | `writeFileStream` | For large files                                      |
+| Non-SAF files       | `copyToLocalFile` | `pasteLocalFile`  | When you need to interact with non-SAF files         |
+
 ```dart
 class SafStream {
   /// Reads the contents of a file from the given [uri] and returns a stream of bytes.
