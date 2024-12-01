@@ -2,7 +2,6 @@ package com.fluttercavalry.saf_stream
 
 import android.content.Context
 import android.net.Uri
-import androidx.annotation.NonNull
 import androidx.documentfile.provider.DocumentFile
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
@@ -129,7 +128,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
 
-                        val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
+                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite)
                         val inStream = FileInputStream(File(localSrc))
 
                         val map = HashMap<String, Any?>()
@@ -159,7 +158,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
 
-                        val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
+                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite)
 
                         val map = HashMap<String, Any?>()
                         map["uri"] = newFile.uri.toString()
@@ -189,7 +188,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
                         val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
-                        val (newFile, outStream) = _createFile(dir, fileName, mime, overwrite)
+                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite)
 
                         val map = HashMap<String, Any?>()
                         map["uri"] = newFile.uri.toString()
@@ -253,7 +252,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
         channel.setMethodCallHandler(null)
     }
 
-    private fun _createFile(dir: DocumentFile, fileName: String, mime: String, overwrite: Boolean) : Pair<DocumentFile, OutputStream> {
+    private fun createOutStream(dir: DocumentFile, fileName: String, mime: String, overwrite: Boolean) : Pair<DocumentFile, OutputStream> {
         val outStream: OutputStream
         val newFile: DocumentFile
         if (overwrite) {
@@ -271,10 +270,10 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
     }
 }
 
-class ReadFileHandler constructor(
-        val inStream: InputStream,
-        val bufferSize: Int,
-        val start: Int?
+class ReadFileHandler(
+    private val inStream: InputStream,
+    private val bufferSize: Int,
+    private val start: Int?
 ) : EventChannel.StreamHandler {
     private var eventSink: EventChannel.EventSink? = null
 
