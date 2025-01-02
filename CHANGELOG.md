@@ -1,3 +1,7 @@
+## 0.10.1
+
+- Update README.
+
 ## 0.10.0
 
 - Deprecate `readFileSync` and `writeFileSync`. This is a non-breaking changes. `readFileBytes` and `writeFileBytes` are added to replace them. The new methods are exactly the same as the old ones. It's just a name change. Because the old names are misleading, they are not synchronous.
