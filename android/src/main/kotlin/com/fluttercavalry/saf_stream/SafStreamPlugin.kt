@@ -65,7 +65,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         }
                     } catch (err: Exception) {
                         launch(Dispatchers.Main) {
-                            result.error("ReadFileError", err.message, null)
+                            result.error("PluginError", err.message, null)
                         }
                     }
                 }
@@ -73,15 +73,21 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
             "copyToLocalFile" -> {
                 CoroutineScope(Dispatchers.IO).launch {
-                    val fileUriStr = Uri.parse(call.argument<String>("src")!!)
-                    val dest = call.argument<String>("dest")!!
+                    try {
+                        val fileUriStr = Uri.parse(call.argument<String>("src")!!)
+                        val dest = call.argument<String>("dest")!!
 
-                    val inputStream = context.contentResolver.openInputStream(fileUriStr)
-                    val outputStream = FileOutputStream(File(dest))
-                    outputStream.use { inputStream?.copyTo(it) }
-                    inputStream?.close()
-                    launch(Dispatchers.Main) {
-                        result.success(null)
+                        val inputStream = context.contentResolver.openInputStream(fileUriStr)
+                        val outputStream = FileOutputStream(File(dest))
+                        outputStream.use { inputStream?.copyTo(it) }
+                        inputStream?.close()
+                        launch(Dispatchers.Main) {
+                            result.success(null)
+                        }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("PluginError", err.message, null)
+                        }
                     }
                 }
             }
@@ -89,28 +95,34 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
             "readFileBytes" -> {
                 CoroutineScope(Dispatchers.IO).launch {
-                    val fileUriStr = Uri.parse(call.argument<String>("fileUri")!!)
-                    val start = call.argument<Int>("start")
-                    val count = call.argument<Int>("count")
+                    try {
+                        val fileUriStr = Uri.parse(call.argument<String>("fileUri")!!)
+                        val start = call.argument<Int>("start")
+                        val count = call.argument<Int>("count")
 
-                    val bytes = context.contentResolver.openInputStream(fileUriStr)?.use {
-                        if (start != null) {
-                            it.skip(start.toLong())
-                        }
-                        if (count != null) {
-                            val buffer = ByteArray(count)
-                            val read = it.read(buffer, 0, count)
-                            if (read <= 0) {
-                                ByteArray(0)
-                            } else {
-                                buffer.copyOf(read)
+                        val bytes = context.contentResolver.openInputStream(fileUriStr)?.use {
+                            if (start != null) {
+                                it.skip(start.toLong())
                             }
-                        } else {
-                            it.buffered().readBytes()
+                            if (count != null) {
+                                val buffer = ByteArray(count)
+                                val read = it.read(buffer, 0, count)
+                                if (read <= 0) {
+                                    ByteArray(0)
+                                } else {
+                                    buffer.copyOf(read)
+                                }
+                            } else {
+                                it.buffered().readBytes()
+                            }
                         }
-                    }
-                    launch(Dispatchers.Main) {
-                        result.success(bytes)
+                        launch(Dispatchers.Main) {
+                            result.success(bytes)
+                        }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("PluginError", err.message, null)
+                        }
                     }
                 }
             }
@@ -141,7 +153,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         }
                     } catch (err: Exception) {
                         launch(Dispatchers.Main) {
-                            result.error("StartWriteStream", err.message, null)
+                            result.error("PluginError", err.message, null)
                         }
                     }
                 }
@@ -170,7 +182,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         }
                     } catch (err: Exception) {
                         launch(Dispatchers.Main) {
-                            result.error("StartWriteStream", err.message, null)
+                            result.error("PluginError", err.message, null)
                         }
                     }
                 }
@@ -201,46 +213,60 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         }
                     } catch (err: Exception) {
                         launch(Dispatchers.Main) {
-                            result.error("StartWriteStream", err.message, null)
+                            result.error("PluginError", err.message, null)
                         }
                     }
                 }
             }
 
             "writeChunk" -> {
-                val session = call.argument<String>("session")!!
-                // Access `writeStreams` in main thread.
-                val outStream = writeStreams[session]
-                if (outStream == null) {
-                    result.error("WriteChunk", "Stream not found", null)
-                } else {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        try {
-                            val data = call.argument<ByteArray>("data")!!
-                            outStream.write(data)
-                            launch(Dispatchers.Main) { result.success(null) }
-                        } catch (err: Exception) {
-                            result.error("WriteChunk", err.message, null)
+                try {
+                    val session = call.argument<String>("session")!!
+                    // Access `writeStreams` in main thread.
+                    val outStream = writeStreams[session]
+                    if (outStream == null) {
+                        result.error("PluginError", "Stream not found", null)
+                    } else {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val data = call.argument<ByteArray>("data")!!
+                                outStream.write(data)
+                                launch(Dispatchers.Main) { result.success(null) }
+                            } catch (err: Exception) {
+                                result.error("PluginError", err.message, null)
+                            }
                         }
                     }
+                } catch (err: Exception) {
+                    result.error("PluginError", err.message, null)
                 }
             }
 
             "endWriteStream" -> {
-                val session = call.argument<String>("session")!!
-                // Access `writeStreams` in main thread.
-                val outStream = writeStreams[session]
-                if (outStream == null) {
-                    result.error("WriteChunk", "Stream not found", null)
-                } else {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        try {
-                            outStream.close()
-                            launch(Dispatchers.Main) { result.success(null) }
-                        } catch (err: Exception) {
-                            launch(Dispatchers.Main) { result.error("CloseWriteStreamError", err.message, null) }
+                try {
+                    val session = call.argument<String>("session")!!
+                    // Access `writeStreams` in main thread.
+                    val outStream = writeStreams[session]
+                    if (outStream == null) {
+                        result.error("PluginError", "Stream not found", null)
+                    } else {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                outStream.close()
+                                launch(Dispatchers.Main) { result.success(null) }
+                            } catch (err: Exception) {
+                                launch(Dispatchers.Main) {
+                                    result.error(
+                                        "CloseWriteStreamError",
+                                        err.message,
+                                        null
+                                    )
+                                }
+                            }
                         }
                     }
+                } catch (err: Exception) {
+                    result.error("PluginError", err.message, null)
                 }
             }
 
