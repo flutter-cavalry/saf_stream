@@ -76,14 +76,14 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                     try {
                         val fileUriStr = Uri.parse(call.argument<String>("src")!!)
                         val dest = call.argument<String>("dest")!!
-
                         val inputStream = context.contentResolver.openInputStream(fileUriStr)
-                        val outputStream = FileOutputStream(File(dest))
-                        outputStream.use { inputStream?.copyTo(it) }
-                        inputStream?.close()
-                        launch(Dispatchers.Main) {
-                            result.success(null)
+                        inputStream?.use { input ->
+                            val file = File(dest)
+                            file.outputStream().use { output ->
+                                input.buffered().copyTo(output)
+                            }
                         }
+                        result.success(null)
                     } catch (err: Exception) {
                         launch(Dispatchers.Main) {
                             result.error("PluginError", err.message, null)
@@ -147,7 +147,12 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         map["uri"] = newFile.uri.toString()
                         map["fileName"] = newFile.name
 
-                        outStream.use { inStream.copyTo(it) }
+                        inStream.use { input ->
+                            outStream.use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+
                         launch(Dispatchers.Main) {
                             result.success(map)
                         }

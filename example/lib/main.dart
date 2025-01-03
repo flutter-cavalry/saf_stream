@@ -162,10 +162,9 @@ class _MyAppState extends State<MyApp> {
   Future<void> _readFileBytes(String uri) async {
     try {
       _clearOutput();
-      var session = ++_session;
       final bytes = await _safStreamPlugin.readFileBytes(uri);
       setState(() {
-        _output += '$session - Bytes: ${bytes.lengthInBytes} \n';
+        _output += 'Read file bytes: ${bytes.lengthInBytes} \n';
       });
     } catch (err) {
       setState(() {
@@ -187,7 +186,7 @@ class _MyAppState extends State<MyApp> {
       await _safStreamPlugin.copyToLocalFile(uri, dest);
       final localContents = await File(dest).readAsBytes();
       setState(() {
-        _output += 'Local contents:\n$localContents\n';
+        _output += 'Copy to local file: ${localContents.length} bytes';
       });
     } catch (err) {
       setState(() {
