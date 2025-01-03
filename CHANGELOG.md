@@ -1,3 +1,8 @@
+## 0.10.2
+
+- Fix uncaught exceptions on invalid URIs.
+- Fix leaks in input streams.
+
 ## 0.10.1
 
 - Update README.
