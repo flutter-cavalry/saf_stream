@@ -105,4 +105,22 @@ class SafStream {
   Future<void> endWriteStream(String session) async {
     return SafStreamPlatform.instance.endWriteStream(session);
   }
+
+  Future<String> startReadCustomFileStream(String uri,
+      {int? bufferSize}) async {
+    return SafStreamPlatform.instance
+        .startReadCustomFileStream(uri, bufferSize: bufferSize);
+  }
+
+  Future<Uint8List?> readCustomFileStreamChunk(String session) async {
+    return SafStreamPlatform.instance.readCustomFileStreamChunk(session);
+  }
+
+  Future<int> skipCustomFileStreamChunk(String session, int count) async {
+    return SafStreamPlatform.instance.skipCustomFileStreamChunk(session, count);
+  }
+
+  Future<void> endReadCustomFileStream(String session) async {
+    return SafStreamPlatform.instance.endReadCustomFileStream(session);
+  }
 }

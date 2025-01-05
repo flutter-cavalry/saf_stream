@@ -28,6 +28,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
     private lateinit var context: Context
     private var pluginBinding: FlutterPlugin.FlutterPluginBinding? = null
     private var writeStreams = mutableMapOf<String, OutputStream>()
+    private var customReadStreams = mutableMapOf<String, CustomReadStream>()
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         pluginBinding = flutterPluginBinding
@@ -238,7 +239,9 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                                 outStream.write(data)
                                 launch(Dispatchers.Main) { result.success(null) }
                             } catch (err: Exception) {
-                                result.error("PluginError", err.message, null)
+                                launch(Dispatchers.Main) {
+                                    result.error("PluginError", err.message, null)
+                                }
                             }
                         }
                     }
@@ -258,11 +261,122 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         CoroutineScope(Dispatchers.IO).launch {
                             try {
                                 outStream.close()
-                                launch(Dispatchers.Main) { result.success(null) }
+                                launch(Dispatchers.Main) {
+                                    writeStreams.remove(session)
+                                    result.success(null)
+                                }
                             } catch (err: Exception) {
                                 launch(Dispatchers.Main) {
+                                    writeStreams.remove(session)
                                     result.error(
                                         "CloseWriteStreamError",
+                                        err.message,
+                                        null
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } catch (err: Exception) {
+                    result.error("PluginError", err.message, null)
+                }
+            }
+
+            "startReadCustomFileStream" -> {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val fileUriStr = call.argument<String>("fileUri")!!
+                        val session = call.argument<String>("session")!!
+                        val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
+
+                        val inStream =
+                            context.contentResolver.openInputStream(Uri.parse(fileUriStr))
+                                ?: throw Exception("Stream creation failed")
+                        launch(Dispatchers.Main) {
+                            val customStream = CustomReadStream(inStream, bufferSize)
+                            customReadStreams[session] = customStream
+
+                            result.success(null)
+                        }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("PluginError", err.message, null)
+                        }
+                    }
+                }
+            }
+
+            "readCustomFileStreamChunk" -> {
+                try {
+                    val session = call.argument<String>("session")!!
+                    val customStream = customReadStreams[session]
+                    if (customStream == null) {
+                        result.error("PluginError", "Stream not found", null)
+                    } else {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val rc = customStream.read()
+                                if (rc == -1) {
+                                    launch(Dispatchers.Main) { result.success(null) }
+                                } else {
+                                    val chunk = customStream.buffer.copyOf(rc)
+                                    launch(Dispatchers.Main) { result.success(chunk) }
+                                }
+                            } catch (err: Exception) {
+                                launch(Dispatchers.Main) {
+                                    result.error("PluginError", err.message, null)
+                                }
+                            }
+                        }
+                    }
+                } catch (err: Exception) {
+                    result.error("PluginError", err.message, null)
+                }
+            }
+
+            "skipCustomFileStreamChunk" -> {
+                try {
+                    val session = call.argument<String>("session")!!
+                    val count = call.argument<Int>("count")!!
+                    val customStream = customReadStreams[session]
+                    if (customStream == null) {
+                        result.error("PluginError", "Stream not found", null)
+                    } else {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val skipped = customStream.skip(count.toLong())
+                                launch(Dispatchers.Main) { result.success(skipped.toInt()) }
+                            } catch (err: Exception) {
+                                launch(Dispatchers.Main) {
+                                    result.error("PluginError", err.message, null)
+                                }
+                            }
+                        }
+                    }
+                } catch (err: Exception) {
+                    result.error("PluginError", err.message, null)
+                }
+            }
+
+            "endReadCustomFileStream" -> {
+                try {
+                    val session = call.argument<String>("session")!!
+                    val customStream = customReadStreams[session]
+                    if (customStream == null) {
+                        result.error("PluginError", "Stream not found", null)
+                    } else {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                customStream.close()
+                                launch(Dispatchers.Main) {
+                                    customReadStreams.remove(session)
+                                    result.success(null)
+                                }
+                            } catch (err: Exception) {
+                                launch(Dispatchers.Main) {
+                                    customReadStreams.remove(session)
+                                    result.error(
+                                        "CloseReadStreamError",
                                         err.message,
                                         null
                                     )
@@ -333,5 +447,24 @@ class ReadFileHandler(
 
     override fun onCancel(p0: Any?) {
         eventSink = null
+    }
+}
+
+class CustomReadStream(
+    private val inStream: InputStream,
+    private val bufferSize: Int,
+) {
+    var buffer = ByteArray(bufferSize)
+
+    fun skip(n: Long): Long {
+        return inStream.skip(n)
+    }
+
+    fun read(): Int {
+        return inStream.read(buffer)
+    }
+
+    fun close() {
+        inStream.close()
     }
 }

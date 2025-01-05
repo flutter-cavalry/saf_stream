@@ -45,7 +45,7 @@ class _MyAppState extends State<MyApp> {
                 : Column(
                     children: [
                       Text(_output),
-                      _sep(),
+                      const SizedBox(height: 10),
                       OutlinedButton(
                           onPressed: _reload, child: const Text('Reload')),
                       OutlinedButton(
@@ -77,17 +77,19 @@ class _MyAppState extends State<MyApp> {
                             decoration: BoxDecoration(
                                 border: Border.all(color: Colors.grey)),
                             child: Column(
+                              spacing: 10,
                               children: [
                                 Text(f.name),
-                                _sep(),
                                 OutlinedButton(
                                     onPressed: () => _readFileStream(f.uri),
                                     child: const Text('Read stream')),
-                                _sep(),
                                 OutlinedButton(
                                     onPressed: () => _readFileBytes(f.uri),
                                     child: const Text('Read bytes')),
-                                _sep(),
+                                OutlinedButton(
+                                    onPressed: () =>
+                                        _readCustomFileStream(f.uri),
+                                    child: const Text('Read custom stream')),
                                 OutlinedButton(
                                     onPressed: () => _copyToLocalFile(f.uri),
                                     child: const Text('Copy to local file')),
@@ -101,10 +103,6 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
-  }
-
-  Widget _sep() {
-    return const SizedBox(width: 10);
   }
 
   Future<void> _reload() async {
@@ -152,6 +150,27 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _output += '$session - <Done>\n';
       });
+    } catch (err) {
+      setState(() {
+        _output = err.toString();
+      });
+    }
+  }
+
+  Future<void> _readCustomFileStream(String uri) async {
+    try {
+      _clearOutput();
+      final session = await _safStreamPlugin.startReadCustomFileStream(uri,
+          bufferSize: 500 * 1024);
+      Uint8List? chunk;
+      while ((chunk =
+              await _safStreamPlugin.readCustomFileStreamChunk(session)) !=
+          null) {
+        setState(() {
+          _output += '<Bytes:${chunk?.length}>\n';
+        });
+      }
+      await _safStreamPlugin.endReadCustomFileStream(session);
     } catch (err) {
       setState(() {
         _output = err.toString();

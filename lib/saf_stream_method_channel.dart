@@ -130,6 +130,43 @@ class MethodChannelSafStream extends SafStreamPlatform {
     });
   }
 
+  @override
+  Future<String> startReadCustomFileStream(String uri,
+      {int? bufferSize}) async {
+    var session = _nextSession().toString();
+    await methodChannel.invokeMethod<String>('startReadCustomFileStream', {
+      'fileUri': uri.toString(),
+      'session': session,
+      'bufferSize': bufferSize,
+    });
+    return session;
+  }
+
+  @override
+  Future<Uint8List?> readCustomFileStreamChunk(String session) async {
+    return await methodChannel
+        .invokeMethod<Uint8List>('readCustomFileStreamChunk', {
+      'session': session.toString(),
+    });
+  }
+
+  @override
+  Future<int> skipCustomFileStreamChunk(String session, int count) async {
+    final res =
+        await methodChannel.invokeMethod<int>('skipCustomFileStreamChunk', {
+      'session': session.toString(),
+      'count': count,
+    });
+    return res ?? 0;
+  }
+
+  @override
+  Future<void> endReadCustomFileStream(String session) async {
+    await methodChannel.invokeMethod<void>('endReadCustomFileStream', {
+      'session': session.toString(),
+    });
+  }
+
   int _nextSession() {
     return ++_session;
   }

@@ -104,4 +104,25 @@ abstract class SafStreamPlatform extends PlatformInterface {
   Future<void> endWriteStream(String session) async {
     throw UnimplementedError('endWriteStream() has not been implemented.');
   }
+
+  Future<String> startReadCustomFileStream(String uri,
+      {int? bufferSize}) async {
+    throw UnimplementedError(
+        'startReadCustomFileStream() has not been implemented.');
+  }
+
+  Future<Uint8List?> readCustomFileStreamChunk(String session) async {
+    throw UnimplementedError(
+        'readCustomFileStreamChunk() has not been implemented.');
+  }
+
+  Future<int> skipCustomFileStreamChunk(String session, int count) async {
+    throw UnimplementedError(
+        'skipCustomFileStreamChunk() has not been implemented.');
+  }
+
+  Future<void> endReadCustomFileStream(String session) async {
+    throw UnimplementedError(
+        'endReadCustomFileStream() has not been implemented.');
+  }
 }
