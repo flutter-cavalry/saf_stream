@@ -106,20 +106,24 @@ class SafStream {
     return SafStreamPlatform.instance.endWriteStream(session);
   }
 
+  /// Like [readFileStream], but returns a session where you can control the reading process.
   Future<String> startReadCustomFileStream(String uri,
       {int? bufferSize}) async {
     return SafStreamPlatform.instance
         .startReadCustomFileStream(uri, bufferSize: bufferSize);
   }
 
+  /// Reads a chunk of bytes from a custom file stream identified by the given [session].
   Future<Uint8List?> readCustomFileStreamChunk(String session) async {
     return SafStreamPlatform.instance.readCustomFileStreamChunk(session);
   }
 
+  /// Skips [count] bytes from a custom file stream identified by the given [session].
   Future<int> skipCustomFileStreamChunk(String session, int count) async {
     return SafStreamPlatform.instance.skipCustomFileStreamChunk(session, count);
   }
 
+  /// Closes a custom file stream identified by the given [session].
   Future<void> endReadCustomFileStream(String session) async {
     return SafStreamPlatform.instance.endReadCustomFileStream(session);
   }

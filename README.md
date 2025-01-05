@@ -8,72 +8,19 @@ Read and write Android SAF `DocumentFile`. Min SDK version: **API 21**.
 
 ## Usage
 
-|                     | Read              | Write             | Description                                          |
-| ------------------- | ----------------- | ----------------- | ---------------------------------------------------- |
-| Bytes (`Uint8List`) | `readFileBytes`   | `writeFileBytes`  | Good for small files or when memory is not a concern |
-| Streams             | `readFileStream`  | `writeFileStream` | For large files                                      |
-| Non-SAF files       | `copyToLocalFile` | `pasteLocalFile`  | When you need to interact with non-SAF files         |
+- File bytes: for small files or when memory is not a concern
+  - Read: `readFileBytes`
+  - Write: `writeFileBytes`
+- File streams: for large files
+  - Read: `readFileStream`
+  - Write: `startWriteStream`, `writeChunk`, `endWriteStream`
+- Non-SAF files: when you need to interact with standard local files
+  - Copy to local file: `copyToLocalFile`
+  - Paste local file into an SAF directory: `pasteLocalFile`
+- Custom read stream: when you need skip bytes on native side instead of on Dart side using `readFileStream`
+  - `startReadCustomFileStream`, `readCustomFileStreamChunk`, `skipCustomFileStreamChunk`, `endReadCustomFileStream`
 
-```dart
-class SafStream {
-  /// Reads the contents of a file from the given [uri]. Unlike [readFileStream],
-  /// this method reads the entire file at once and returns a [Uint8List].
-  ///
-  /// If [start] and [count] are provided, reads [count] bytes starting from [start].
-  Future<Uint8List> readFileBytes(String uri, {int? start, int? count});
-
-  /// Reads the contents of a file from the given [uri] and returns a stream of bytes.
-  ///
-  /// If [bufferSize] is provided, the stream will read data in chunks of [bufferSize] bytes.
-  /// If [start] is provided, the stream will start reading from the given position.
-  Future<Stream<Uint8List>> readFileStream(String uri,
-      {int? bufferSize, int? start});
-
-  /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
-  ///
-  /// Returns a [SafNewFile], which contains the Uri and file name of newly created file.
-  ///
-  /// If [overwrite] is true, the file will be overwritten if it already exists.
-  /// If [overwrite] is false and a file with the same name already exists, a new name
-  /// will be generated and returned in the resulting [SafNewFile].
-  Future<SafNewFile> writeFileBytes(
-      String treeUri, String fileName, String mime, Uint8List data,
-      {bool? overwrite});
-
-  /// Copies a SAF file from the given [srcUri] to a local file [destPath].
-  Future<void> copyToLocalFile(String srcUri, String destPath);
-
-  /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]
-  /// to write data into the destination stream. Call [endWriteStream] to close the destination stream.
-  ///
-  /// If [overwrite] is true, the file will be overwritten if it already exists.
-  /// If [overwrite] is false and a file with the same name already exists, a new name
-  /// will be generated and returned in the resulting [SafWriteStreamInfo].
-  Future<SafWriteStreamInfo> startWriteStream(
-      String treeUri, String fileName, String mime,
-      {bool? overwrite});
-
-  /// Writes the given [data] to an out stream identified by the given [session].
-  Future<void> writeChunk(String session, Uint8List data);
-
-  /// Closes an out stream identified by the given [session].
-  Future<void> endWriteStream(String session);
-
-  /// Copies the contents of a local file [srcPath] and creates a new file
-  /// from the given [treeUri], [fileName] and [mime].
-  ///
-  /// Returns a [SafNewFile], which contains the Uri and file name of newly created file.
-  ///
-  /// If [overwrite] is true, the file will be overwritten if it already exists.
-  /// If [overwrite] is false and a file with the same name already exists, a new name
-  /// will be generated and returned in the resulting [SafNewFile].
-  Future<SafNewFile> pasteLocalFile(
-      String srcPath, String treeUri, String fileName, String mime,
-      {bool? overwrite});
-}
-```
-
-## Example
+## Examples
 
 ```dart
 import 'package:saf_stream/saf_stream.dart';
