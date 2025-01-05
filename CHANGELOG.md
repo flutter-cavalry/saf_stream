@@ -1,3 +1,7 @@
+## 0.11.0
+
+- Add custom file stream support (`startReadCustomFileStream`, `readCustomFileStreamChunk`, `skipCustomFileStreamChunk`, `endReadCustomFileStream`) to allow skipping bytes on native side.
+
 ## 0.10.2
 
 - Fix uncaught exceptions on invalid URIs.
