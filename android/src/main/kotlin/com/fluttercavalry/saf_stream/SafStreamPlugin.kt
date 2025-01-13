@@ -14,7 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -421,6 +420,7 @@ class ReadFileHandler(
     private val start: Int?
 ) : EventChannel.StreamHandler {
     private var eventSink: EventChannel.EventSink? = null
+    private var cancelled = false
 
     override fun onListen(p0: Any?, sink: EventChannel.EventSink) {
         eventSink = sink
@@ -432,7 +432,7 @@ class ReadFileHandler(
                         stream.skip(start.toLong())
                     }
                     var rc: Int = stream.read(buffer)
-                    while (rc != -1) {
+                    while (rc != -1 && !cancelled) {
                         val chunk = buffer.copyOf(rc)
                         launch(Dispatchers.Main) { sink.success(chunk) }
                         rc = stream.read(buffer)
@@ -447,6 +447,7 @@ class ReadFileHandler(
 
     override fun onCancel(p0: Any?) {
         eventSink = null
+        cancelled = true
     }
 }
 
