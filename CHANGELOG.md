@@ -1,3 +1,7 @@
+## 0.11.1
+
+- More graceful handling of cancellation.
+
 ## 0.11.0
 
 - Add custom file stream support (`startReadCustomFileStream`, `readCustomFileStreamChunk`, `skipCustomFileStreamChunk`, `endReadCustomFileStream`) to allow skipping bytes on native side.
