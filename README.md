@@ -17,7 +17,7 @@ Read and write Android SAF `DocumentFile`. Min SDK version: **API 21**.
 - Non-SAF files: when you need to interact with standard local files
   - Copy to local file: `copyToLocalFile`
   - Paste local file into an SAF directory: `pasteLocalFile`
-- Custom read stream: when you need skip bytes on native side instead of on Dart side using `readFileStream`
+- Custom read streams: when you need to skip bytes on native side instead of on Dart side using `readFileStream`
   - `startReadCustomFileStream`, `readCustomFileStreamChunk`, `skipCustomFileStreamChunk`, `endReadCustomFileStream`
 
 ## Examples
