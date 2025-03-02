@@ -31,14 +31,14 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<Uint8List> readFileBytes(String uri, {int? start, int? count}) async {
-    if (start != null && count == null) {
-      throw ArgumentError('`count` must be provided if `start` is provided');
+    start ??= 0;
+    if (start < 0) {
+      throw ArgumentError('`start` must be greater than or equal to 0');
     }
     if (count != null) {
       if (count <= 0) {
         throw ArgumentError('`count` must be greater than 0');
       }
-      start ??= 0;
     }
     final res = await methodChannel.invokeMethod<Uint8List>('readFileBytes', {
       'fileUri': uri.toString(),

@@ -97,11 +97,11 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         val fileUriStr = Uri.parse(call.argument<String>("fileUri")!!)
-                        val start = call.argument<Int>("start")
+                        val start = call.argument<Int>("start") ?: 0
                         val count = call.argument<Int>("count")
 
                         val bytes = context.contentResolver.openInputStream(fileUriStr)?.use {
-                            if (start != null) {
+                            if (start > 0) {
                                 it.skip(start.toLong())
                             }
                             if (count != null) {
