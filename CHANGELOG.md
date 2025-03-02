@@ -1,3 +1,7 @@
+## 0.11.2
+
+- Allow `start` to be null when `count` is not null in `readFileBytes`.
+
 ## 0.11.1
 
 - More graceful handling of cancellation.
