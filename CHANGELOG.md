@@ -1,3 +1,7 @@
+## 0.11.3
+
+- Update some error messages to be more descriptive.
+
 ## 0.11.2
 
 - Allow `start` to be null when `count` is not null in `readFileBytes`.
