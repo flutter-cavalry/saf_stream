@@ -8,16 +8,16 @@ Read and write Android SAF `DocumentFile`. Min SDK version: **API 21**.
 
 ## Usage
 
-- File bytes: for small files or when memory is not a concern
+- Use bytes-based APIs for small files or when memory is not a concern.
   - Read: `readFileBytes`
   - Write: `writeFileBytes`
-- File streams: for large files
+- Use file streams for large files.
   - Read: `readFileStream`
   - Write: `startWriteStream`, `writeChunk`, `endWriteStream`
-- Non-SAF files: when you need to interact with standard local files
-  - Copy to local file: `copyToLocalFile`
+- APIs to interact with non-SAF files:
+  - Copy an SAF file to local file: `copyToLocalFile`
   - Paste local file into an SAF directory: `pasteLocalFile`
-- Custom read streams: when you need to skip bytes on native side instead of on Dart side using `readFileStream`
+- Some advanced read APIs if you need to skip bytes on native side instead of on Dart side using `readFileStream`
   - `startReadCustomFileStream`, `readCustomFileStreamChunk`, `skipCustomFileStreamChunk`, `endReadCustomFileStream`
 
 ## Examples
