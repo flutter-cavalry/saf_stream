@@ -1,7 +1,6 @@
 package com.fluttercavalry.saf_stream
 
 import android.content.Context
-import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
@@ -16,6 +15,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
+import androidx.core.net.toUri
 
 /** SafStreamPlugin */
 class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
@@ -49,7 +49,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 
 
                         val inStream =
-                            context.contentResolver.openInputStream(Uri.parse(fileUriStr))
+                            context.contentResolver.openInputStream(fileUriStr.toUri())
                                 ?: throw Exception("Stream creation failed")
                         launch(Dispatchers.Main) {
                             val streamHandler = ReadFileHandler(inStream, bufferSize, start)
@@ -74,7 +74,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
             "copyToLocalFile" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        val fileUriStr = Uri.parse(call.argument<String>("src")!!)
+                        val fileUriStr = call.argument<String>("src")!!.toUri()
                         val dest = call.argument<String>("dest")!!
                         val inputStream = context.contentResolver.openInputStream(fileUriStr)
                         inputStream?.use { input ->
@@ -96,7 +96,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
             "readFileBytes" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        val fileUriStr = Uri.parse(call.argument<String>("fileUri")!!)
+                        val fileUriStr = call.argument<String>("fileUri")!!.toUri()
                         val start = call.argument<Int>("start") ?: 0
                         val count = call.argument<Int>("count")
 
@@ -138,7 +138,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val overwrite = call.argument<Boolean>("overwrite")!!
                         val append = call.argument<Boolean>("append")!!
 
-                        val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
+                        val dir = DocumentFile.fromTreeUri(context, treeUriStr.toUri())
                             ?: throw Exception("Directory not found")
 
                         val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite, append)
@@ -174,7 +174,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val data = call.argument<ByteArray>("data")!!
                         val overwrite = call.argument<Boolean>("overwrite")!!
                         val append = call.argument<Boolean>("append")!!
-                        val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
+                        val dir = DocumentFile.fromTreeUri(context, treeUriStr.toUri())
                             ?: throw Exception("Directory not found")
 
                         val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite, append)
@@ -206,7 +206,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val overwrite = call.argument<Boolean>("overwrite")!!
                         val append = call.argument<Boolean>("append")!!
 
-                        val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
+                        val dir = DocumentFile.fromTreeUri(context, treeUriStr.toUri())
                             ?: throw Exception("Directory not found")
                         val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite, append)
 
@@ -292,7 +292,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
 
                         val inStream =
-                            context.contentResolver.openInputStream(Uri.parse(fileUriStr))
+                            context.contentResolver.openInputStream(fileUriStr.toUri())
                                 ?: throw Exception("Stream creation failed")
                         launch(Dispatchers.Main) {
                             val customStream = CustomReadStream(inStream, bufferSize)
@@ -456,7 +456,7 @@ class ReadFileHandler(
 
 class CustomReadStream(
     private val inStream: InputStream,
-    private val bufferSize: Int,
+    bufferSize: Int,
 ) {
     var buffer = ByteArray(bufferSize)
 
