@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'package:saf_stream/saf_stream.dart';
 import 'package:saf_util/saf_util.dart';
 import 'package:saf_util/saf_util_platform_interface.dart';
@@ -58,6 +58,10 @@ class _MyAppState extends State<MyApp> {
                           onPressed: () => _writeFile('1.txt', true),
                           child: const Text('Create 1.txt (overwrite)')),
                       OutlinedButton(
+                          onPressed: () =>
+                              _writeFile('1.txt', false, append: true),
+                          child: const Text('Create 1.txt (append)')),
+                      OutlinedButton(
                           onPressed: () => _pasteLocalFile(false),
                           child: const Text(
                               'Create a.bin from local file (pasteLocalFile)')),
@@ -66,11 +70,18 @@ class _MyAppState extends State<MyApp> {
                           child: const Text(
                               'Create a.bin from local file (pasteLocalFile) (overwrite)')),
                       OutlinedButton(
+                          onPressed: () => _pasteLocalFile(false, append: true),
+                          child: const Text(
+                              'Create a.bin from local file (pasteLocalFile) (append)')),
+                      OutlinedButton(
                           onPressed: () => _writeFileBytes(false),
                           child: const Text('Write a.bin bytes')),
                       OutlinedButton(
                           onPressed: () => _writeFileBytes(true),
                           child: const Text('Write a.bin bytes (overwrite)')),
+                      OutlinedButton(
+                          onPressed: () => _writeFileBytes(false, append: true),
+                          child: const Text('Write a.bin bytes (append)')),
                       ...(_files.where((f) => !f.isDir == true).map((f) =>
                           Container(
                             padding: const EdgeInsets.all(8),
@@ -214,7 +225,8 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _writeFile(String? fileName, bool overwrite) async {
+  Future<void> _writeFile(String? fileName, bool overwrite,
+      {bool? append}) async {
     try {
       _clearOutput();
       var treeUri = _treeUri;
@@ -225,8 +237,12 @@ class _MyAppState extends State<MyApp> {
       fileName = fileName ?? DateTime.now().millisecondsSinceEpoch.toString();
 
       var info = await _safStreamPlugin.startWriteStream(
-          treeUri, fileName, 'text/plain',
-          overwrite: overwrite);
+        treeUri,
+        fileName,
+        'text/plain',
+        overwrite: overwrite,
+        append: append,
+      );
       setState(() {
         _output += '$session - <Writing file $info>\n';
       });
@@ -249,7 +265,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _pasteLocalFile(bool overwrite) async {
+  Future<void> _pasteLocalFile(bool overwrite, {bool? append}) async {
     try {
       _clearOutput();
       var treeUri = _treeUri;
@@ -262,7 +278,7 @@ class _MyAppState extends State<MyApp> {
 
       final info = await _safStreamPlugin.pasteLocalFile(
           localSrc, treeUri, 'a.bin', 'application/octet-stream',
-          overwrite: overwrite);
+          overwrite: overwrite, append: append);
       setState(() {
         _output = 'Created file: $info\n';
       });
@@ -273,7 +289,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _writeFileBytes(bool overwrite) async {
+  Future<void> _writeFileBytes(bool overwrite, {bool? append}) async {
     try {
       _clearOutput();
       var treeUri = _treeUri;
@@ -286,7 +302,8 @@ class _MyAppState extends State<MyApp> {
           'a.bin',
           'application/octet-stream',
           Uint8List.fromList(utf8.encode('✅❌❤️⚒️😊😒')),
-          overwrite: overwrite);
+          overwrite: overwrite,
+          append: append);
       setState(() {
         _output = 'Created file: $info\n';
       });
