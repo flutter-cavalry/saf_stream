@@ -1,3 +1,7 @@
+## 0.12.0
+
+- Add `append` param to all write APIs.
+
 ## 0.11.3
 
 - Update some error messages to be more descriptive.
