@@ -136,11 +136,12 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val mime = call.argument<String>("mime")!!
                         val localSrc = call.argument<String>("localSrc")!!
                         val overwrite = call.argument<Boolean>("overwrite")!!
+                        val append = call.argument<Boolean>("append")!!
 
                         val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
 
-                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite)
+                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite, append)
                         val inStream = FileInputStream(File(localSrc))
 
                         val map = HashMap<String, Any?>()
@@ -172,10 +173,11 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val mime = call.argument<String>("mime")!!
                         val data = call.argument<ByteArray>("data")!!
                         val overwrite = call.argument<Boolean>("overwrite")!!
+                        val append = call.argument<Boolean>("append")!!
                         val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
 
-                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite)
+                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite, append)
 
                         val map = HashMap<String, Any?>()
                         map["uri"] = newFile.uri.toString()
@@ -202,10 +204,11 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val mime = call.argument<String>("mime")!!
                         val session = call.argument<String>("session")!!
                         val overwrite = call.argument<Boolean>("overwrite")!!
+                        val append = call.argument<Boolean>("append")!!
 
                         val dir = DocumentFile.fromTreeUri(context, Uri.parse(treeUriStr))
                             ?: throw Exception("Directory not found")
-                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite)
+                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite, append)
 
                         val map = HashMap<String, Any?>()
                         map["uri"] = newFile.uri.toString()
@@ -396,14 +399,14 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
         channel.setMethodCallHandler(null)
     }
 
-    private fun createOutStream(dir: DocumentFile, fileName: String, mime: String, overwrite: Boolean) : Pair<DocumentFile, OutputStream> {
+    private fun createOutStream(dir: DocumentFile, fileName: String, mime: String, overwrite: Boolean, append: Boolean) : Pair<DocumentFile, OutputStream> {
         val outStream: OutputStream
         val newFile: DocumentFile
-        if (overwrite) {
+        if (overwrite || append) {
             val curFile = dir.findFile(fileName)
-            newFile = curFile ?: dir.createFile(mime, fileName) ?: throw Exception("File creation failed at $fileName (createOutStream, overwrite=1")
-            outStream = context.contentResolver.openOutputStream(newFile.uri, "wt")
-                ?: throw Exception("Stream creation failed at $fileName (createOutStream, overwrite=1")
+            newFile = curFile ?: dir.createFile(mime, fileName) ?: throw Exception("File creation failed at $fileName (createOutStream, overwrite=$overwrite, append=$append)")
+            outStream = context.contentResolver.openOutputStream(newFile.uri, if (append) "wa" else "wt")
+                ?: throw Exception("Stream creation failed at $fileName (createOutStream, overwrite=$overwrite, append=$append")
         } else {
             newFile = dir.createFile(mime, fileName)
                 ?: throw Exception("File creation failed at $fileName (createOutStream, overwrite=0")

@@ -17,6 +17,7 @@ Read and write Android SAF `DocumentFile`. Min SDK version: **API 21**.
 - APIs to interact with non-SAF files:
   - Copy an SAF file to local file: `copyToLocalFile`
   - Paste local file into an SAF directory: `pasteLocalFile`
+- Write APIs support `overwrite` and `append` as optional parameters.
 - Some advanced read APIs if you need to skip bytes on native side instead of on Dart side using `readFileStream`
   - `startReadCustomFileStream`, `readCustomFileStreamChunk`, `skipCustomFileStreamChunk`, `endReadCustomFileStream`
 

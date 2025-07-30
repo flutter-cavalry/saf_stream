@@ -48,9 +48,10 @@ class SafStream {
   /// will be generated and returned in the resulting [SafNewFile].
   Future<SafNewFile> pasteLocalFile(
       String srcPath, String treeUri, String fileName, String mime,
-      {bool? overwrite}) async {
-    return SafStreamPlatform.instance
-        .pasteLocalFile(srcPath, treeUri, fileName, mime, overwrite: overwrite);
+      {bool? overwrite, bool? append}) async {
+    return SafStreamPlatform.instance.pasteLocalFile(
+        srcPath, treeUri, fileName, mime,
+        overwrite: overwrite, append: append);
   }
 
   /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
@@ -62,9 +63,10 @@ class SafStream {
   /// will be generated and returned in the resulting [SafNewFile].
   Future<SafNewFile> writeFileBytes(
       String treeUri, String fileName, String mime, Uint8List data,
-      {bool? overwrite}) async {
-    return SafStreamPlatform.instance
-        .writeFileBytes(treeUri, fileName, mime, data, overwrite: overwrite);
+      {bool? overwrite, bool? append}) async {
+    return SafStreamPlatform.instance.writeFileBytes(
+        treeUri, fileName, mime, data,
+        overwrite: overwrite, append: append);
   }
 
   /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
@@ -78,9 +80,10 @@ class SafStream {
       'Use [writeFileBytes] instead. It is the same method with a different name. The [writeFileSync] is confusing because it is not synchronous.')
   Future<SafNewFile> writeFileSync(
       String treeUri, String fileName, String mime, Uint8List data,
-      {bool? overwrite}) async {
-    return SafStreamPlatform.instance
-        .writeFileBytes(treeUri, fileName, mime, data, overwrite: overwrite);
+      {bool? overwrite, bool? append}) async {
+    return SafStreamPlatform.instance.writeFileBytes(
+        treeUri, fileName, mime, data,
+        overwrite: overwrite, append: append);
   }
 
   /// Returns a [SafWriteStreamInfo]. Call [writeChunk] with the [session] from [SafWriteStreamInfo]
@@ -91,9 +94,9 @@ class SafStream {
   /// will be generated and returned in the resulting [SafWriteStreamInfo].
   Future<SafWriteStreamInfo> startWriteStream(
       String treeUri, String fileName, String mime,
-      {bool? overwrite}) async {
-    return SafStreamPlatform.instance
-        .startWriteStream(treeUri, fileName, mime, overwrite: overwrite);
+      {bool? overwrite, bool? append}) async {
+    return SafStreamPlatform.instance.startWriteStream(treeUri, fileName, mime,
+        overwrite: overwrite, append: append);
   }
 
   /// Writes the given [data] to an out stream identified by the given [session].
