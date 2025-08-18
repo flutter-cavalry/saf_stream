@@ -1,3 +1,7 @@
+## 0.12.1
+
+- Allow `start` param to be `Long`.
+
 ## 0.12.0
 
 - Add `append` param to all write APIs.
