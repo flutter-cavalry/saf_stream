@@ -99,6 +99,11 @@ class _MyAppState extends State<MyApp> {
                                     child: const Text('Read bytes')),
                                 OutlinedButton(
                                     onPressed: () =>
+                                        _readFileBytes(f.uri, start: 10),
+                                    child: const Text(
+                                        'Read bytes (skip first 10 bytes)')),
+                                OutlinedButton(
+                                    onPressed: () =>
                                         _readCustomFileStream(f.uri),
                                     child: const Text('Read custom stream')),
                                 OutlinedButton(
@@ -189,10 +194,10 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _readFileBytes(String uri) async {
+  Future<void> _readFileBytes(String uri, {int? start}) async {
     try {
       _clearOutput();
-      final bytes = await _safStreamPlugin.readFileBytes(uri);
+      final bytes = await _safStreamPlugin.readFileBytes(uri, start: start);
       setState(() {
         _output += 'Read file bytes: ${bytes.lengthInBytes} \n';
       });
