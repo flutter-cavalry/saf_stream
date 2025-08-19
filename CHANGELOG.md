@@ -1,4 +1,4 @@
-## 0.12.2
+## 0.12.3
 
 - Fix regression introduced in 0.12.1.
 
