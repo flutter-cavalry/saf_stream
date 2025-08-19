@@ -45,7 +45,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val fileUriStr = call.argument<String>("fileUri")!!
                         val session = call.argument<String>("session")!!
                         val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
-                        val start = call.argument<Long>("start")
+                        val start = call.argument<Long>("start") ?: 0L
 
 
                         val inStream =
@@ -97,7 +97,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         val fileUriStr = call.argument<String>("fileUri")!!.toUri()
-                        val start = call.argument<Long>("start") ?: 0
+                        val start = call.argument<Long>("start") ?: 0L
                         val count = call.argument<Int>("count")
 
                         val bytes = context.contentResolver.openInputStream(fileUriStr)?.use {
@@ -420,7 +420,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
 class ReadFileHandler(
     private val inStream: InputStream,
     private val bufferSize: Int,
-    private val start: Long?
+    private val start: Long,
 ) : EventChannel.StreamHandler {
     private var eventSink: EventChannel.EventSink? = null
     private var cancelled = false
@@ -431,8 +431,8 @@ class ReadFileHandler(
             try {
                 val buffer = ByteArray(bufferSize)
                 inStream.use { stream ->
-                    if (start != null) {
-                        stream.skip(start.toLong())
+                    if (start != 0L) {
+                        stream.skip(start)
                     }
                     var rc: Int = stream.read(buffer)
                     while (rc != -1 && !cancelled) {
