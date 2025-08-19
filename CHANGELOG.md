@@ -1,3 +1,7 @@
+## 0.12.2
+
+- Fix regression introduced in 0.12.1.
+
 ## 0.12.1
 
 - Allow `start` param to be `Long`.
