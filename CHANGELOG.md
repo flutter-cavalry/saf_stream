@@ -1,3 +1,7 @@
+## 1.0.0
+
+- No changes. This is just a version bump to mark the stable release.
+
 ## 0.12.3
 
 - Fix regression introduced in 0.12.1.
