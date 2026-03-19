@@ -1,3 +1,7 @@
+## 2.0.0
+
+- Update to Kotlin 2.0.0.
+
 ## 1.0.0
 
 - No changes. This is just a version bump to mark the stable release.
