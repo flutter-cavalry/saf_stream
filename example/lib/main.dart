@@ -126,7 +126,7 @@ class _MyAppState extends State<MyApp> {
       if (_treeUri == null) {
         return;
       }
-      var files = await _safUtil.list(_treeUri!);
+      final files = await _safUtil.list(_treeUri!);
       setState(() {
         _files = files;
         _output = '';
@@ -140,11 +140,11 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _selectFolder() async {
     try {
-      var treeUri = await _safUtil.openDirectory();
-      if (treeUri == null) {
+      final dirDF = await _safUtil.pickDirectory();
+      if (dirDF == null) {
         return;
       }
-      _treeUri = treeUri;
+      _treeUri = dirDF.uri;
       await _reload();
     } catch (err) {
       setState(() {
@@ -156,8 +156,8 @@ class _MyAppState extends State<MyApp> {
   Future<void> _readFileStream(String uri) async {
     try {
       _clearOutput();
-      var session = ++_session;
-      await for (var bytes in await _safStreamPlugin.readFileStream(uri,
+      final session = ++_session;
+      await for (final bytes in await _safStreamPlugin.readFileStream(uri,
           bufferSize: 500 * 1024)) {
         setState(() {
           _output += '$session - <Bytes:${bytes.length}>\n';
@@ -234,14 +234,14 @@ class _MyAppState extends State<MyApp> {
       {bool? append}) async {
     try {
       _clearOutput();
-      var treeUri = _treeUri;
+      final treeUri = _treeUri;
       if (treeUri == null) {
         return;
       }
-      var session = ++_session;
+      final session = ++_session;
       fileName = fileName ?? DateTime.now().millisecondsSinceEpoch.toString();
 
-      var info = await _safStreamPlugin.startWriteStream(
+      final info = await _safStreamPlugin.startWriteStream(
         treeUri,
         fileName,
         'text/plain',
@@ -273,7 +273,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> _pasteLocalFile(bool overwrite, {bool? append}) async {
     try {
       _clearOutput();
-      var treeUri = _treeUri;
+      final treeUri = _treeUri;
       if (treeUri == null) {
         return;
       }
@@ -297,7 +297,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> _writeFileBytes(bool overwrite, {bool? append}) async {
     try {
       _clearOutput();
-      var treeUri = _treeUri;
+      final treeUri = _treeUri;
       if (treeUri == null) {
         return;
       }

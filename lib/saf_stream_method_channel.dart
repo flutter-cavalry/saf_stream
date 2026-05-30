@@ -12,20 +12,23 @@ class MethodChannelSafStream extends SafStreamPlatform {
   var _session = 0;
 
   @override
-  Future<Stream<Uint8List>> readFileStream(String uri,
-      {int? bufferSize, int? start}) async {
-    var session = _nextSession();
-    var channelName =
-        await methodChannel.invokeMethod<String>('readFileStream', {
-      'fileUri': uri.toString(),
-      'session': session.toString(),
-      'bufferSize': bufferSize,
-      'start': start,
-    });
+  Future<Stream<Uint8List>> readFileStream(
+    String uri, {
+    int? bufferSize,
+    int? start,
+  }) async {
+    final session = _nextSession();
+    final channelName = await methodChannel
+        .invokeMethod<String>('readFileStream', {
+          'fileUri': uri.toString(),
+          'session': session.toString(),
+          'bufferSize': bufferSize,
+          'start': start,
+        });
     if (channelName == null) {
       throw Exception('Unexpected empty channel name from `readFile`');
     }
-    var stream = EventChannel(channelName);
+    final stream = EventChannel(channelName);
     return stream.receiveBroadcastStream().map((e) => e as Uint8List);
   }
 
@@ -61,17 +64,22 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafNewFile> pasteLocalFile(
-      String srcPath, String treeUri, String fileName, String mime,
-      {bool? overwrite, bool? append}) async {
-    var map =
-        await methodChannel.invokeMapMethod<String, dynamic>('pasteLocalFile', {
-      'localSrc': srcPath,
-      'treeUri': treeUri.toString(),
-      'fileName': fileName,
-      'mime': mime,
-      'overwrite': overwrite ?? false,
-      'append': append ?? false,
-    });
+    String srcPath,
+    String treeUri,
+    String fileName,
+    String mime, {
+    bool? overwrite,
+    bool? append,
+  }) async {
+    final map = await methodChannel
+        .invokeMapMethod<String, dynamic>('pasteLocalFile', {
+          'localSrc': srcPath,
+          'treeUri': treeUri.toString(),
+          'fileName': fileName,
+          'mime': mime,
+          'overwrite': overwrite ?? false,
+          'append': append ?? false,
+        });
     if (map == null) {
       throw Exception('Unexpected empty response from `pasteLocalFile`');
     }
@@ -80,17 +88,22 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafNewFile> writeFileBytes(
-      String treeUri, String fileName, String mime, Uint8List data,
-      {bool? overwrite, bool? append}) async {
-    var map =
-        await methodChannel.invokeMapMethod<String, dynamic>('writeFileBytes', {
-      'treeUri': treeUri.toString(),
-      'fileName': fileName,
-      'mime': mime,
-      'data': data,
-      'overwrite': overwrite ?? false,
-      'append': append ?? false,
-    });
+    String treeUri,
+    String fileName,
+    String mime,
+    Uint8List data, {
+    bool? overwrite,
+    bool? append,
+  }) async {
+    final map = await methodChannel
+        .invokeMapMethod<String, dynamic>('writeFileBytes', {
+          'treeUri': treeUri.toString(),
+          'fileName': fileName,
+          'mime': mime,
+          'data': data,
+          'overwrite': overwrite ?? false,
+          'append': append ?? false,
+        });
     if (map == null) {
       throw Exception('Unexpected empty response from `writeFileBytes`');
     }
@@ -99,18 +112,22 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<SafWriteStreamInfo> startWriteStream(
-      String treeUri, String fileName, String mime,
-      {bool? overwrite, bool? append}) async {
-    var session = _nextSession().toString();
-    var map = await methodChannel
+    String treeUri,
+    String fileName,
+    String mime, {
+    bool? overwrite,
+    bool? append,
+  }) async {
+    final session = _nextSession().toString();
+    final map = await methodChannel
         .invokeMapMethod<String, dynamic>('startWriteStream', {
-      'treeUri': treeUri.toString(),
-      'session': session,
-      'fileName': fileName,
-      'mime': mime,
-      'overwrite': overwrite ?? false,
-      'append': append ?? false,
-    });
+          'treeUri': treeUri.toString(),
+          'session': session,
+          'fileName': fileName,
+          'mime': mime,
+          'overwrite': overwrite ?? false,
+          'append': append ?? false,
+        });
     if (map == null) {
       throw Exception('Unexpected empty response from `startWriteStream`');
     }
@@ -134,9 +151,11 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
-  Future<String> startReadCustomFileStream(String uri,
-      {int? bufferSize}) async {
-    var session = _nextSession().toString();
+  Future<String> startReadCustomFileStream(
+    String uri, {
+    int? bufferSize,
+  }) async {
+    final session = _nextSession().toString();
     await methodChannel.invokeMethod<String>('startReadCustomFileStream', {
       'fileUri': uri.toString(),
       'session': session,
@@ -147,19 +166,18 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<Uint8List?> readCustomFileStreamChunk(String session) async {
-    return await methodChannel
-        .invokeMethod<Uint8List>('readCustomFileStreamChunk', {
-      'session': session.toString(),
-    });
+    return await methodChannel.invokeMethod<Uint8List>(
+      'readCustomFileStreamChunk',
+      {'session': session.toString()},
+    );
   }
 
   @override
   Future<int> skipCustomFileStreamChunk(String session, int count) async {
-    final res =
-        await methodChannel.invokeMethod<int>('skipCustomFileStreamChunk', {
-      'session': session.toString(),
-      'count': count,
-    });
+    final res = await methodChannel.invokeMethod<int>(
+      'skipCustomFileStreamChunk',
+      {'session': session.toString(), 'count': count},
+    );
     return res ?? 0;
   }
 
