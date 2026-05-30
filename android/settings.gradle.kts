@@ -1,1 +1,1 @@
-rootProject.name = 'saf_stream'
+rootProject.name = "saf_stream"
