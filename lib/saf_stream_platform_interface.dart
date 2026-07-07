@@ -66,8 +66,11 @@ abstract class SafStreamPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<Stream<Uint8List>> readFileStream(String uri,
-      {int? bufferSize, int? start}) async {
+  Future<Stream<Uint8List>> readFileStream(
+    String uri, {
+    int? bufferSize,
+    int? start,
+  }) async {
     throw UnimplementedError('readFileStream() has not been implemented.');
   }
 
@@ -80,21 +83,52 @@ abstract class SafStreamPlatform extends PlatformInterface {
   }
 
   Future<SafNewFile> pasteLocalFile(
-      String srcPath, String treeUri, String fileName, String mime,
-      {bool? overwrite, bool? append}) async {
+    String srcPath,
+    String treeUri,
+    String fileName,
+    String mime, {
+    bool? overwrite,
+    bool? append,
+  }) async {
     throw UnimplementedError('pasteLocalFile() has not been implemented.');
   }
 
   Future<SafNewFile> writeFileBytes(
-      String treeUri, String fileName, String mime, Uint8List data,
-      {bool? overwrite, bool? append}) async {
+    String treeUri,
+    String fileName,
+    String mime,
+    Uint8List data, {
+    bool? overwrite,
+    bool? append,
+  }) async {
     throw UnimplementedError('writeFileBytes() has not been implemented.');
   }
 
+  Future<SafNewFile> writeFileUriBytes(
+    String fileUri,
+    Uint8List data, {
+    bool? append,
+  }) async {
+    throw UnimplementedError('writeFileUriBytes() has not been implemented.');
+  }
+
   Future<SafWriteStreamInfo> startWriteStream(
-      String treeUri, String fileName, String mime,
-      {bool? overwrite, bool? append}) async {
+    String treeUri,
+    String fileName,
+    String mime, {
+    bool? overwrite,
+    bool? append,
+  }) async {
     throw UnimplementedError('startWriteStream() has not been implemented.');
+  }
+
+  Future<SafWriteStreamInfo> startWriteFileUriStream(
+    String fileUri, {
+    bool? append,
+  }) async {
+    throw UnimplementedError(
+      'startWriteFileUriStream() has not been implemented.',
+    );
   }
 
   Future<void> writeChunk(String session, Uint8List data) async {
@@ -105,24 +139,30 @@ abstract class SafStreamPlatform extends PlatformInterface {
     throw UnimplementedError('endWriteStream() has not been implemented.');
   }
 
-  Future<String> startReadCustomFileStream(String uri,
-      {int? bufferSize}) async {
+  Future<String> startReadCustomFileStream(
+    String uri, {
+    int? bufferSize,
+  }) async {
     throw UnimplementedError(
-        'startReadCustomFileStream() has not been implemented.');
+      'startReadCustomFileStream() has not been implemented.',
+    );
   }
 
   Future<Uint8List?> readCustomFileStreamChunk(String session) async {
     throw UnimplementedError(
-        'readCustomFileStreamChunk() has not been implemented.');
+      'readCustomFileStreamChunk() has not been implemented.',
+    );
   }
 
   Future<int> skipCustomFileStreamChunk(String session, int count) async {
     throw UnimplementedError(
-        'skipCustomFileStreamChunk() has not been implemented.');
+      'skipCustomFileStreamChunk() has not been implemented.',
+    );
   }
 
   Future<void> endReadCustomFileStream(String session) async {
     throw UnimplementedError(
-        'endReadCustomFileStream() has not been implemented.');
+      'endReadCustomFileStream() has not been implemented.',
+    );
   }
 }

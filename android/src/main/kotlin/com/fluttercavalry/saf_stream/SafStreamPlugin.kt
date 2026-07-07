@@ -1,6 +1,7 @@
 package com.fluttercavalry.saf_stream
 
 import android.content.Context
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
@@ -15,14 +16,15 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
-import androidx.core.net.toUri
 
 /** SafStreamPlugin */
-class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
-    /// The MethodChannel that will the communication between Flutter and native Android
-    ///
-    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-    /// when the Flutter Engine is detached from the Activity
+class SafStreamPlugin :
+    FlutterPlugin,
+    MethodCallHandler {
+    // The MethodChannel that will the communication between Flutter and native Android
+    //
+    // This local reference serves to register the plugin with the Flutter Engine and unregister it
+    // when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
     private var pluginBinding: FlutterPlugin.FlutterPluginBinding? = null
@@ -36,7 +38,10 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
         channel.setMethodCallHandler(this)
     }
 
-    override fun onMethodCall(call: MethodCall, result: Result) {
+    override fun onMethodCall(
+        call: MethodCall,
+        result: Result,
+    ) {
         when (call.method) {
             "readFileStream" -> {
                 CoroutineScope(Dispatchers.IO).launch {
@@ -47,7 +52,6 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
                         val start = (call.argument<Number>("start")?.toLong()) ?: 0L
 
-
                         val inStream =
                             context.contentResolver.openInputStream(fileUriStr.toUri())
                                 ?: throw Exception("Stream creation failed")
@@ -56,9 +60,9 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                             val channelName = "saf_stream/readFile/$session"
                             EventChannel(
                                 pluginBinding?.binaryMessenger,
-                                channelName
+                                channelName,
                             ).setStreamHandler(
-                                streamHandler
+                                streamHandler,
                             )
 
                             result.success(channelName)
@@ -92,7 +96,6 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                 }
             }
 
-
             "readFileBytes" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
@@ -100,22 +103,23 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val start = (call.argument<Number>("start")?.toLong()) ?: 0L
                         val count = call.argument<Int>("count")
 
-                        val bytes = context.contentResolver.openInputStream(fileUriStr)?.use {
-                            if (start > 0) {
-                                it.skip(start)
-                            }
-                            if (count != null) {
-                                val buffer = ByteArray(count)
-                                val read = it.read(buffer, 0, count)
-                                if (read <= 0) {
-                                    ByteArray(0)
-                                } else {
-                                    buffer.copyOf(read)
+                        val bytes =
+                            context.contentResolver.openInputStream(fileUriStr)?.use {
+                                if (start > 0) {
+                                    it.skip(start)
                                 }
-                            } else {
-                                it.buffered().readBytes()
+                                if (count != null) {
+                                    val buffer = ByteArray(count)
+                                    val read = it.read(buffer, 0, count)
+                                    if (read <= 0) {
+                                        ByteArray(0)
+                                    } else {
+                                        buffer.copyOf(read)
+                                    }
+                                } else {
+                                    it.buffered().readBytes()
+                                }
                             }
-                        }
                         launch(Dispatchers.Main) {
                             result.success(bytes)
                         }
@@ -138,10 +142,11 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                         val overwrite = call.argument<Boolean>("overwrite")!!
                         val append = call.argument<Boolean>("append")!!
 
-                        val dir = DocumentFile.fromTreeUri(context, treeUriStr.toUri())
-                            ?: throw Exception("Directory not found")
+                        val dir =
+                            DocumentFile.fromTreeUri(context, treeUriStr.toUri())
+                                ?: throw Exception("Directory not found")
 
-                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite, append)
+                        val (newFile, outStream) = createOutStreamFromDir(dir, fileName, mime, overwrite, append)
                         val inStream = FileInputStream(File(localSrc))
 
                         val map = HashMap<String, Any?>()
@@ -168,16 +173,15 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
             "writeFileBytes" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        val treeUriStr = call.argument<String>("treeUri")!!
-                        val fileName = call.argument<String>("fileName")!!
+                        val treeUriStr = call.argument<String>("treeUri")
+                        val fileName = call.argument<String>("fileName")
+                        val fileUri = call.argument<String>("fileUri")
                         val mime = call.argument<String>("mime")!!
                         val data = call.argument<ByteArray>("data")!!
                         val overwrite = call.argument<Boolean>("overwrite")!!
                         val append = call.argument<Boolean>("append")!!
-                        val dir = DocumentFile.fromTreeUri(context, treeUriStr.toUri())
-                            ?: throw Exception("Directory not found")
 
-                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite, append)
+                        val (newFile, outStream) = createOutStreamFromFileOrDir(fileUri, treeUriStr, fileName, mime, overwrite, append)
 
                         val map = HashMap<String, Any?>()
                         map["uri"] = newFile.uri.toString()
@@ -198,17 +202,15 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
             "startWriteStream" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        // Arguments are enforced on dart side.
-                        val treeUriStr = call.argument<String>("treeUri")!!
-                        val fileName = call.argument<String>("fileName")!!
+                        val treeUriStr = call.argument<String>("treeUri")
+                        val fileName = call.argument<String>("fileName")
+                        val fileUri = call.argument<String>("fileUri")
                         val mime = call.argument<String>("mime")!!
                         val session = call.argument<String>("session")!!
                         val overwrite = call.argument<Boolean>("overwrite")!!
                         val append = call.argument<Boolean>("append")!!
 
-                        val dir = DocumentFile.fromTreeUri(context, treeUriStr.toUri())
-                            ?: throw Exception("Directory not found")
-                        val (newFile, outStream) = createOutStream(dir, fileName, mime, overwrite, append)
+                        val (newFile, outStream) = createOutStreamFromFileOrDir(fileUri, treeUriStr, fileName, mime, overwrite, append)
 
                         val map = HashMap<String, Any?>()
                         map["uri"] = newFile.uri.toString()
@@ -273,7 +275,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                                     result.error(
                                         "CloseWriteStreamError",
                                         err.message,
-                                        null
+                                        null,
                                     )
                                 }
                             }
@@ -380,7 +382,7 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                                     result.error(
                                         "CloseReadStreamError",
                                         err.message,
-                                        null
+                                        null,
                                     )
                                 }
                             }
@@ -391,7 +393,9 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
                 }
             }
 
-            else -> result.notImplemented()
+            else -> {
+                result.notImplemented()
+            }
         }
     }
 
@@ -399,12 +403,20 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
         channel.setMethodCallHandler(null)
     }
 
-    private fun createOutStream(dir: DocumentFile, fileName: String, mime: String, overwrite: Boolean, append: Boolean) : Pair<DocumentFile, OutputStream> {
+    private fun createOutStreamFromDir(
+        dir: DocumentFile,
+        fileName: String,
+        mime: String,
+        overwrite: Boolean,
+        append: Boolean,
+    ): Pair<DocumentFile, OutputStream> {
         val outStream: OutputStream
         val newFile: DocumentFile
         if (overwrite || append) {
             val curFile = dir.findFile(fileName)
-            newFile = curFile ?: dir.createFile(mime, fileName) ?: throw Exception("File creation failed at $fileName (createOutStream, overwrite=$overwrite, append=$append)")
+            newFile =
+                curFile ?: dir.createFile(mime, fileName)
+                    ?: throw Exception("File creation failed at $fileName (createOutStream, overwrite=$overwrite, append=$append)")
             outStream = context.contentResolver.openOutputStream(newFile.uri, if (append) "wa" else "wt")
                 ?: throw Exception("Stream creation failed at $fileName (createOutStream, overwrite=$overwrite, append=$append")
         } else {
@@ -415,6 +427,39 @@ class SafStreamPlugin : FlutterPlugin, MethodCallHandler {
         }
         return Pair(newFile, outStream)
     }
+
+    private fun createOutStreamFromFileUri(
+        fileUriStr: String,
+        append: Boolean,
+    ): Pair<DocumentFile, OutputStream> {
+        val fileUri = fileUriStr.toUri()
+        val newFile =
+            DocumentFile.fromSingleUri(context, fileUri)
+                ?: throw Exception("File not found at $fileUriStr (createOutStreamFromFileUri)")
+        val outStream =
+            context.contentResolver.openOutputStream(newFile.uri, if (append) "wa" else "wt")
+                ?: throw Exception("Stream creation failed at $fileUriStr (createOutStreamFromFileUri, append=$append")
+        return Pair(newFile, outStream)
+    }
+
+    private fun createOutStreamFromFileOrDir(
+        fileUriStr: String?,
+        treeUriStr: String?,
+        fileName: String?,
+        mime: String,
+        overwrite: Boolean,
+        append: Boolean,
+    ): Pair<DocumentFile, OutputStream> =
+        if (fileUriStr != null) {
+            createOutStreamFromFileUri(fileUriStr, append)
+        } else if (treeUriStr != null && fileName != null) {
+            val dir =
+                DocumentFile.fromTreeUri(context, treeUriStr.toUri())
+                    ?: throw Exception("Directory not found at $treeUriStr (createOutStreamFromFileOrDir)")
+            createOutStreamFromDir(dir, fileName, mime, overwrite, append)
+        } else {
+            throw Exception("Either fileUri or treeUri and fileName must be provided (createOutStreamFromFileOrDir)")
+        }
 }
 
 class ReadFileHandler(
@@ -425,7 +470,10 @@ class ReadFileHandler(
     private var eventSink: EventChannel.EventSink? = null
     private var cancelled = false
 
-    override fun onListen(p0: Any?, sink: EventChannel.EventSink) {
+    override fun onListen(
+        p0: Any?,
+        sink: EventChannel.EventSink,
+    ) {
         eventSink = sink
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -460,13 +508,9 @@ class CustomReadStream(
 ) {
     var buffer = ByteArray(bufferSize)
 
-    fun skip(n: Long): Long {
-        return inStream.skip(n)
-    }
+    fun skip(n: Long): Long = inStream.skip(n)
 
-    fun read(): Int {
-        return inStream.read(buffer)
-    }
+    fun read(): Int = inStream.read(buffer)
 
     fun close() {
         inStream.close()

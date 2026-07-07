@@ -82,6 +82,12 @@ class _MyAppState extends State<MyApp> {
                       OutlinedButton(
                           onPressed: () => _writeFileBytes(false, append: true),
                           child: const Text('Write a.bin bytes (append)')),
+                      OutlinedButton(
+                          onPressed: () => _writeFileUriBytes(),
+                          child: const Text('Write a.bin bytes (URI)')),
+                      OutlinedButton(
+                          onPressed: () => _writeFileUriBytes(append: true),
+                          child: const Text('Write a.bin bytes (URI, append)')),
                       ...(_files.where((f) => !f.isDir == true).map((f) =>
                           Container(
                             padding: const EdgeInsets.all(8),
@@ -311,6 +317,34 @@ class _MyAppState extends State<MyApp> {
           append: append);
       setState(() {
         _output = 'Created file: $info\n';
+      });
+    } catch (err) {
+      setState(() {
+        _output = err.toString();
+      });
+    }
+  }
+
+  Future<void> _writeFileUriBytes({bool? append}) async {
+    try {
+      _clearOutput();
+      final treeUri = _treeUri;
+      if (treeUri == null) {
+        return;
+      }
+
+      final fileInfo = await _safStreamPlugin.writeFileBytes(treeUri,
+          'test.txt', 'text/plain', Uint8List.fromList(utf8.encode('123')),
+          append: append);
+
+      final info = await _safStreamPlugin.writeFileUriBytes(
+          fileInfo.uri.toString(),
+          Uint8List.fromList(utf8.encode('✅❌❤️⚒️😊😒')),
+          append: append);
+      final content = utf8
+          .decode(await _safStreamPlugin.readFileBytes(info.uri.toString()));
+      setState(() {
+        _output = 'Created file: $info\nContent:\n$content';
       });
     } catch (err) {
       setState(() {

@@ -111,6 +111,23 @@ class MethodChannelSafStream extends SafStreamPlatform {
   }
 
   @override
+  Future<SafNewFile> writeFileUriBytes(
+    String fileUri,
+    Uint8List data, {
+    bool? append,
+  }) async {
+    // This calls the same native method as `writeFileBytes`, but with a different set of parameters.
+    final map = await methodChannel.invokeMapMethod<String, dynamic>(
+      'writeFileBytes',
+      {'fileUri': fileUri.toString(), 'data': data, 'append': append ?? false},
+    );
+    if (map == null) {
+      throw Exception('Unexpected empty response from `writeFileUriBytes`');
+    }
+    return SafNewFile.fromMap(map);
+  }
+
+  @override
   Future<SafWriteStreamInfo> startWriteStream(
     String treeUri,
     String fileName,
@@ -130,6 +147,26 @@ class MethodChannelSafStream extends SafStreamPlatform {
         });
     if (map == null) {
       throw Exception('Unexpected empty response from `startWriteStream`');
+    }
+    final newFile = SafNewFile.fromMap(map);
+    return SafWriteStreamInfo(session, newFile);
+  }
+
+  @override
+  Future<SafWriteStreamInfo> startWriteFileUriStream(
+    String fileUri, {
+    bool? append,
+  }) async {
+    final session = _nextSession().toString();
+    // This calls the same native method as `startWriteStream`, but with a different set of parameters.
+    final map = await methodChannel.invokeMapMethod<String, dynamic>(
+      'startWriteStream',
+      {'fileUri': fileUri.toString(), 'append': append ?? false},
+    );
+    if (map == null) {
+      throw Exception(
+        'Unexpected empty response from `startWriteFileUriStream`',
+      );
     }
     final newFile = SafNewFile.fromMap(map);
     return SafWriteStreamInfo(session, newFile);
