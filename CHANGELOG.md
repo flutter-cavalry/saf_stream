@@ -1,3 +1,7 @@
+## 3.1.0
+
+- Add `writeFileUriBytes` and `startWriteFileUriStream` to write to SAF files using file URI instead of directory + file name.
+
 ## 3.0.0
 
 - **Breaking**: Migrate to AGP 9
