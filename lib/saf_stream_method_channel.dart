@@ -161,7 +161,11 @@ class MethodChannelSafStream extends SafStreamPlatform {
     // This calls the same native method as `startWriteStream`, but with a different set of parameters.
     final map = await methodChannel.invokeMapMethod<String, dynamic>(
       'startWriteStream',
-      {'fileUri': fileUri.toString(), 'append': append ?? false},
+      {
+        'fileUri': fileUri.toString(),
+        'session': session,
+        'append': append ?? false,
+      },
     );
     if (map == null) {
       throw Exception(

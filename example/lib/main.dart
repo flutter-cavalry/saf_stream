@@ -89,6 +89,15 @@ class _MyAppState extends State<MyApp> {
                       OutlinedButton(
                           onPressed: () => _writeFileUriBytes(append: true),
                           child: const Text('Write a.bin bytes (URI, append)')),
+                      OutlinedButton(
+                          onPressed: () => _writeFileUriBytes(withStream: true),
+                          child: const Text(
+                              'Write a.bin bytes (URI, startWriteFileUriStream)')),
+                      OutlinedButton(
+                          onPressed: () => _writeFileUriBytes(
+                              withStream: true, append: true),
+                          child: const Text(
+                              'Write a.bin bytes (URI, startWriteFileUriStream, append)')),
                       ...(_files.where((f) => !f.isDir == true).map((f) =>
                           Container(
                             padding: const EdgeInsets.all(8),
@@ -342,8 +351,10 @@ class _MyAppState extends State<MyApp> {
       if (withStream == true) {
         final streamInfo = await _safStreamPlugin
             .startWriteFileUriStream(fileInfo.uri.toString(), append: append);
-        await _safStreamPlugin.writeChunk(
-            streamInfo.session, Uint8List.fromList(utf8.encode('✅❌❤️⚒️😊😒')));
+        await _safStreamPlugin.writeChunk(streamInfo.session,
+            Uint8List.fromList(utf8.encode('1: ✅❌❤️⚒️😊😒')));
+        await _safStreamPlugin.writeChunk(streamInfo.session,
+            Uint8List.fromList(utf8.encode('2: ✅❌❤️⚒️😊😒')));
         await _safStreamPlugin.endWriteStream(streamInfo.session);
 
         info = streamInfo.fileResult;
