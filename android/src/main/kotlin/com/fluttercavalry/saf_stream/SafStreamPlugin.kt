@@ -176,10 +176,10 @@ class SafStreamPlugin :
                         val treeUriStr = call.argument<String>("treeUri")
                         val fileName = call.argument<String>("fileName")
                         val fileUri = call.argument<String>("fileUri")
-                        val mime = call.argument<String>("mime")!!
+                        val mime = call.argument<String>("mime")?:""
                         val data = call.argument<ByteArray>("data")!!
-                        val overwrite = call.argument<Boolean>("overwrite")!!
-                        val append = call.argument<Boolean>("append")!!
+                        val overwrite = call.argument<Boolean>("overwrite")?:false
+                        val append = call.argument<Boolean>("append")?:false
 
                         val (newFile, outStream) = createOutStreamFromFileOrDir(fileUri, treeUriStr, fileName, mime, overwrite, append)
 
@@ -205,10 +205,10 @@ class SafStreamPlugin :
                         val treeUriStr = call.argument<String>("treeUri")
                         val fileName = call.argument<String>("fileName")
                         val fileUri = call.argument<String>("fileUri")
-                        val mime = call.argument<String>("mime")!!
+                        val mime = call.argument<String>("mime")?:""
                         val session = call.argument<String>("session")!!
-                        val overwrite = call.argument<Boolean>("overwrite")!!
-                        val append = call.argument<Boolean>("append")!!
+                        val overwrite = call.argument<Boolean>("overwrite")?:false
+                        val append = call.argument<Boolean>("append")?:false
 
                         val (newFile, outStream) = createOutStreamFromFileOrDir(fileUri, treeUriStr, fileName, mime, overwrite, append)
 

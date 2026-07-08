@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:saf_stream/saf_stream.dart';
+import 'package:saf_stream/saf_stream_platform_interface.dart';
 import 'package:saf_util/saf_util.dart';
 import 'package:saf_util/saf_util_platform_interface.dart';
 import 'package:tmp_path/tmp_path.dart';
@@ -325,7 +326,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _writeFileUriBytes({bool? append}) async {
+  Future<void> _writeFileUriBytes({bool? append, bool? withStream}) async {
     try {
       _clearOutput();
       final treeUri = _treeUri;
@@ -335,12 +336,23 @@ class _MyAppState extends State<MyApp> {
 
       final fileInfo = await _safStreamPlugin.writeFileBytes(treeUri,
           'test.txt', 'text/plain', Uint8List.fromList(utf8.encode('123')),
-          append: append);
+          overwrite: true);
 
-      final info = await _safStreamPlugin.writeFileUriBytes(
-          fileInfo.uri.toString(),
-          Uint8List.fromList(utf8.encode('✅❌❤️⚒️😊😒')),
-          append: append);
+      final SafNewFile info;
+      if (withStream == true) {
+        final streamInfo = await _safStreamPlugin
+            .startWriteFileUriStream(fileInfo.uri.toString(), append: append);
+        await _safStreamPlugin.writeChunk(
+            streamInfo.session, Uint8List.fromList(utf8.encode('✅❌❤️⚒️😊😒')));
+        await _safStreamPlugin.endWriteStream(streamInfo.session);
+
+        info = streamInfo.fileResult;
+      } else {
+        info = await _safStreamPlugin.writeFileUriBytes(fileInfo.uri.toString(),
+            Uint8List.fromList(utf8.encode('✅❌❤️⚒️😊😒')),
+            append: append);
+      }
+
       final content = utf8
           .decode(await _safStreamPlugin.readFileBytes(info.uri.toString()));
       setState(() {
