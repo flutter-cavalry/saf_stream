@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -14,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
-import java.io.InputStream
 import java.io.OutputStream
 
 /** SafStreamPlugin */
@@ -28,12 +26,14 @@ class SafStreamPlugin :
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
     private var pluginBinding: FlutterPlugin.FlutterPluginBinding? = null
-    private var writeStreams = mutableMapOf<String, OutputStream>()
-    private var customReadStreams = mutableMapOf<String, CustomReadStream>()
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         pluginBinding = flutterPluginBinding
         context = flutterPluginBinding.applicationContext
+        // Hand the Android Context to the JNI bridge so methods called
+        // directly from Dart (bypassing this MethodChannel) can still reach
+        // the ContentResolver.
+        SafStreamJni.appContext = context
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "saf_stream")
         channel.setMethodCallHandler(this)
     }
@@ -44,28 +44,26 @@ class SafStreamPlugin :
     ) {
         when (call.method) {
             "readFileStream" -> {
+                // Only opens the stream and registers it with the JNI bridge
+                // under `session`. Actual chunk reads happen via direct JNI
+                // calls to `SafStreamJni.readChunk` from Dart, not through an
+                // EventChannel. This avoids one BinaryMessenger round trip
+                // per chunk.
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        // Arguments are enforced on dart side.
                         val fileUriStr = call.argument<String>("fileUri")!!
                         val session = call.argument<String>("session")!!
-                        val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
                         val start = (call.argument<Number>("start")?.toLong()) ?: 0L
 
                         val inStream =
                             context.contentResolver.openInputStream(fileUriStr.toUri())
                                 ?: throw Exception("Stream creation failed")
+                        if (start != 0L) {
+                            inStream.skip(start)
+                        }
+                        SafStreamJni.registerInputStream(session, inStream)
                         launch(Dispatchers.Main) {
-                            val streamHandler = ReadFileHandler(inStream, bufferSize, start)
-                            val channelName = "saf_stream/readFile/$session"
-                            EventChannel(
-                                pluginBinding?.binaryMessenger,
-                                channelName,
-                            ).setStreamHandler(
-                                streamHandler,
-                            )
-
-                            result.success(channelName)
+                            result.success(session)
                         }
                     } catch (err: Exception) {
                         launch(Dispatchers.Main) {
@@ -97,29 +95,19 @@ class SafStreamPlugin :
             }
 
             "readFileBytes" -> {
+                // Note: this path is also directly callable from Dart via JNI
+                // (`SafStreamJni.readFileBytes`), skipping this MethodChannel
+                // entirely. It's kept here too so the plugin still works for
+                // any caller that only wired up the MethodChannel side (e.g.
+                // during a partial migration, or on hosts where the JNI
+                // plugin failed to initialize).
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        val fileUriStr = call.argument<String>("fileUri")!!.toUri()
+                        val fileUriStr = call.argument<String>("fileUri")!!
                         val start = (call.argument<Number>("start")?.toLong()) ?: 0L
-                        val count = call.argument<Int>("count")
+                        val count = call.argument<Int>("count") ?: -1
 
-                        val bytes =
-                            context.contentResolver.openInputStream(fileUriStr)?.use {
-                                if (start > 0) {
-                                    it.skip(start)
-                                }
-                                if (count != null) {
-                                    val buffer = ByteArray(count)
-                                    val read = it.read(buffer, 0, count)
-                                    if (read <= 0) {
-                                        ByteArray(0)
-                                    } else {
-                                        buffer.copyOf(read)
-                                    }
-                                } else {
-                                    it.buffered().readBytes()
-                                }
-                            }
+                        val bytes = SafStreamJni.readFileBytes(fileUriStr, start, count)
                         launch(Dispatchers.Main) {
                             result.success(bytes)
                         }
@@ -216,9 +204,8 @@ class SafStreamPlugin :
                         map["uri"] = newFile.uri.toString()
                         map["fileName"] = newFile.name
 
+                        SafStreamJni.registerOutputStream(session, outStream)
                         launch(Dispatchers.Main) {
-                            // Access `writeStreams` in main thread.
-                            writeStreams[session] = outStream
                             result.success(map)
                         }
                     } catch (err: Exception) {
@@ -229,79 +216,58 @@ class SafStreamPlugin :
                 }
             }
 
+            // `writeChunk` and `endWriteStream` are no longer called from
+            // Dart in the normal path -- Dart calls `SafStreamJni.writeChunk`
+            // / `SafStreamJni.closeOutputStream` directly via JNI instead, to
+            // avoid one MethodChannel round trip per chunk. These handlers
+            // are kept as a MethodChannel-only fallback.
             "writeChunk" -> {
-                try {
-                    val session = call.argument<String>("session")!!
-                    // Access `writeStreams` in main thread.
-                    val outStream = writeStreams[session]
-                    if (outStream == null) {
-                        result.error("PluginError", "Stream not found", null)
-                    } else {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                val data = call.argument<ByteArray>("data")!!
-                                outStream.write(data)
-                                launch(Dispatchers.Main) { result.success(null) }
-                            } catch (err: Exception) {
-                                launch(Dispatchers.Main) {
-                                    result.error("PluginError", err.message, null)
-                                }
-                            }
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val session = call.argument<String>("session")!!
+                        val data = call.argument<ByteArray>("data")!!
+                        SafStreamJni.writeChunk(session, data)
+                        launch(Dispatchers.Main) { result.success(null) }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("PluginError", err.message, null)
                         }
                     }
-                } catch (err: Exception) {
-                    result.error("PluginError", err.message, null)
                 }
             }
 
             "endWriteStream" -> {
-                try {
-                    val session = call.argument<String>("session")!!
-                    // Access `writeStreams` in main thread.
-                    val outStream = writeStreams[session]
-                    if (outStream == null) {
-                        result.error("PluginError", "Stream not found", null)
-                    } else {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                outStream.close()
-                                launch(Dispatchers.Main) {
-                                    writeStreams.remove(session)
-                                    result.success(null)
-                                }
-                            } catch (err: Exception) {
-                                launch(Dispatchers.Main) {
-                                    writeStreams.remove(session)
-                                    result.error(
-                                        "CloseWriteStreamError",
-                                        err.message,
-                                        null,
-                                    )
-                                }
-                            }
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val session = call.argument<String>("session")!!
+                        SafStreamJni.closeOutputStream(session)
+                        launch(Dispatchers.Main) { result.success(null) }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("CloseWriteStreamError", err.message, null)
                         }
                     }
-                } catch (err: Exception) {
-                    result.error("PluginError", err.message, null)
                 }
             }
 
+            // The custom-read-stream family shares the exact same registry as
+            // `readFileStream` now (`SafStreamJni.inputStreams`), keyed by
+            // session. `readCustomFileStreamChunk` / `skipCustomFileStreamChunk`
+            // / `endReadCustomFileStream` are no longer called from Dart in
+            // the normal path -- Dart calls `SafStreamJni.readChunk` /
+            // `skipInput` / `closeInputStream` directly via JNI. These
+            // handlers remain as a MethodChannel-only fallback.
             "startReadCustomFileStream" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         val fileUriStr = call.argument<String>("fileUri")!!
                         val session = call.argument<String>("session")!!
-                        val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
 
                         val inStream =
                             context.contentResolver.openInputStream(fileUriStr.toUri())
                                 ?: throw Exception("Stream creation failed")
-                        launch(Dispatchers.Main) {
-                            val customStream = CustomReadStream(inStream, bufferSize)
-                            customReadStreams[session] = customStream
-
-                            result.success(null)
-                        }
+                        SafStreamJni.registerInputStream(session, inStream)
+                        launch(Dispatchers.Main) { result.success(null) }
                     } catch (err: Exception) {
                         launch(Dispatchers.Main) {
                             result.error("PluginError", err.message, null)
@@ -311,85 +277,48 @@ class SafStreamPlugin :
             }
 
             "readCustomFileStreamChunk" -> {
-                try {
-                    val session = call.argument<String>("session")!!
-                    val customStream = customReadStreams[session]
-                    if (customStream == null) {
-                        result.error("PluginError", "Stream not found", null)
-                    } else {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                val rc = customStream.read()
-                                if (rc == -1) {
-                                    launch(Dispatchers.Main) { result.success(null) }
-                                } else {
-                                    val chunk = customStream.buffer.copyOf(rc)
-                                    launch(Dispatchers.Main) { result.success(chunk) }
-                                }
-                            } catch (err: Exception) {
-                                launch(Dispatchers.Main) {
-                                    result.error("PluginError", err.message, null)
-                                }
-                            }
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val session = call.argument<String>("session")!!
+                        val bufferSize = call.argument<Int>("bufferSize") ?: (4 * 1024 * 1024)
+                        val bytes = SafStreamJni.readChunk(session, bufferSize)
+                        launch(Dispatchers.Main) {
+                            result.success(if (bytes.isEmpty()) null else bytes)
+                        }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("PluginError", err.message, null)
                         }
                     }
-                } catch (err: Exception) {
-                    result.error("PluginError", err.message, null)
                 }
             }
 
             "skipCustomFileStreamChunk" -> {
-                try {
-                    val session = call.argument<String>("session")!!
-                    val count = call.argument<Int>("count")!!
-                    val customStream = customReadStreams[session]
-                    if (customStream == null) {
-                        result.error("PluginError", "Stream not found", null)
-                    } else {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                val skipped = customStream.skip(count.toLong())
-                                launch(Dispatchers.Main) { result.success(skipped.toInt()) }
-                            } catch (err: Exception) {
-                                launch(Dispatchers.Main) {
-                                    result.error("PluginError", err.message, null)
-                                }
-                            }
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val session = call.argument<String>("session")!!
+                        val count = call.argument<Int>("count")!!
+                        val skipped = SafStreamJni.skipInput(session, count.toLong())
+                        launch(Dispatchers.Main) { result.success(skipped.toInt()) }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("PluginError", err.message, null)
                         }
                     }
-                } catch (err: Exception) {
-                    result.error("PluginError", err.message, null)
                 }
             }
 
             "endReadCustomFileStream" -> {
-                try {
-                    val session = call.argument<String>("session")!!
-                    val customStream = customReadStreams[session]
-                    if (customStream == null) {
-                        result.error("PluginError", "Stream not found", null)
-                    } else {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                customStream.close()
-                                launch(Dispatchers.Main) {
-                                    customReadStreams.remove(session)
-                                    result.success(null)
-                                }
-                            } catch (err: Exception) {
-                                launch(Dispatchers.Main) {
-                                    customReadStreams.remove(session)
-                                    result.error(
-                                        "CloseReadStreamError",
-                                        err.message,
-                                        null,
-                                    )
-                                }
-                            }
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val session = call.argument<String>("session")!!
+                        SafStreamJni.closeInputStream(session)
+                        launch(Dispatchers.Main) { result.success(null) }
+                    } catch (err: Exception) {
+                        launch(Dispatchers.Main) {
+                            result.error("CloseReadStreamError", err.message, null)
                         }
                     }
-                } catch (err: Exception) {
-                    result.error("PluginError", err.message, null)
                 }
             }
 
@@ -462,57 +391,4 @@ class SafStreamPlugin :
         }
 }
 
-class ReadFileHandler(
-    private val inStream: InputStream,
-    private val bufferSize: Int,
-    private val start: Long,
-) : EventChannel.StreamHandler {
-    private var eventSink: EventChannel.EventSink? = null
-    private var cancelled = false
 
-    override fun onListen(
-        p0: Any?,
-        sink: EventChannel.EventSink,
-    ) {
-        eventSink = sink
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val buffer = ByteArray(bufferSize)
-                inStream.use { stream ->
-                    if (start != 0L) {
-                        stream.skip(start)
-                    }
-                    var rc: Int = stream.read(buffer)
-                    while (rc != -1 && !cancelled) {
-                        val chunk = buffer.copyOf(rc)
-                        launch(Dispatchers.Main) { sink.success(chunk) }
-                        rc = stream.read(buffer)
-                    }
-                    launch(Dispatchers.Main) { sink.endOfStream() }
-                }
-            } catch (err: Exception) {
-                launch(Dispatchers.Main) { sink.error("ReadFileError", err.message, null) }
-            }
-        }
-    }
-
-    override fun onCancel(p0: Any?) {
-        eventSink = null
-        cancelled = true
-    }
-}
-
-class CustomReadStream(
-    private val inStream: InputStream,
-    bufferSize: Int,
-) {
-    var buffer = ByteArray(bufferSize)
-
-    fun skip(n: Long): Long = inStream.skip(n)
-
-    fun read(): Int = inStream.read(buffer)
-
-    fun close() {
-        inStream.close()
-    }
-}
