@@ -73,13 +73,19 @@ class SafStreamJniIo {
       try {
         while (!cancelled) {
           final chunk = _readChunk(session, bufferSize);
-          if (chunk.isEmpty) break;
+          if (chunk.isEmpty) {
+            break;
+          }
           controller.add(chunk);
         }
       } catch (err, st) {
-        if (!cancelled) controller.addError(err, st);
+        if (!cancelled) {
+          controller.addError(err, st);
+        }
       } finally {
-        if (!cancelled) await controller.close();
+        if (!cancelled) {
+          await controller.close();
+        }
         endRead(session);
       }
     }
@@ -172,7 +178,9 @@ class SafStreamJniIo {
   /// underlying bytes rather than the signed/unsigned-aware element loop.
   static Uint8List _toUint8List(JByteArray jArray) {
     final n = jArray.length;
-    if (n == 0) return Uint8List(0);
+    if (n == 0) {
+      return Uint8List(0);
+    }
     final int8 = jArray.getRange(0, n);
     return Uint8List.fromList(int8.buffer.asUint8List(int8.offsetInBytes, n));
   }
