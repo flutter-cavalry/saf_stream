@@ -1,3 +1,7 @@
+## 4.0.0
+
+- Significantly improve performance by adding JNI calls by @Neo-vortex.
+
 ## 3.1.0
 
 - Add `writeFileUriBytes` and `startWriteFileUriStream` to write to SAF files using file URI instead of directory + file name.
