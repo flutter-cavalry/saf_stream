@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:jni/jni.dart';
 
-
 ///    `JStaticMethodId`s are resolved once and cached (`static final`,
 ///    matching the pattern package:jni's own generated bindings use in
 ///    `core_bindings.dart`), not re-resolved with `staticMethodId(...)` on
@@ -13,30 +12,42 @@ import 'package:jni/jni.dart';
 class SafStreamJniIo {
   SafStreamJniIo._();
 
-  static final JClass _class =
-      JClass.forName('com/fluttercavalry/saf_stream/SafStreamJni');
+  static final JClass _class = JClass.forName(
+    'com/fluttercavalry/saf_stream/SafStreamJni',
+  );
 
-  static final _idReadChunk =
-      _class.staticMethodId('readChunk', '(Ljava/lang/String;I)[B');
-  static final _idSkipInput =
-      _class.staticMethodId('skipInput', '(Ljava/lang/String;J)J');
-  static final _idCloseInputStream =
-      _class.staticMethodId('closeInputStream', '(Ljava/lang/String;)V');
-  static final _idWriteChunk =
-      _class.staticMethodId('writeChunk', '(Ljava/lang/String;[B)V');
-  static final _idCloseOutputStream =
-      _class.staticMethodId('closeOutputStream', '(Ljava/lang/String;)V');
+  static final _idReadChunk = _class.staticMethodId(
+    'readChunk',
+    '(Ljava/lang/String;I)[B',
+  );
+  static final _idSkipInput = _class.staticMethodId(
+    'skipInput',
+    '(Ljava/lang/String;J)J',
+  );
+  static final _idCloseInputStream = _class.staticMethodId(
+    'closeInputStream',
+    '(Ljava/lang/String;)V',
+  );
+  static final _idWriteChunk = _class.staticMethodId(
+    'writeChunk',
+    '(Ljava/lang/String;[B)V',
+  );
+  static final _idCloseOutputStream = _class.staticMethodId(
+    'closeOutputStream',
+    '(Ljava/lang/String;)V',
+  );
   static final _idReadFileBytes = _class.staticMethodId(
-      'readFileBytes', '(Ljava/lang/String;JI)[B');
+    'readFileBytes',
+    '(Ljava/lang/String;JI)[B',
+  );
 
   static Uint8List _readChunk(String session, int length) {
     final jSession = session.toJString();
     try {
-      final jResult = _idReadChunk.call(
-        _class,
-        JByteArray.type,
-        [jSession, length],
-      );
+      final jResult = _idReadChunk.call(_class, JByteArray.type, [
+        jSession,
+        length,
+      ]);
       try {
         return _toUint8List(jResult);
       } finally {
@@ -111,7 +122,7 @@ class SafStreamJniIo {
 
   static void writeChunk(String session, Uint8List data) {
     final jSession = session.toJString();
-    final jData = JByteArray.from(data);
+    final jData = JByteArray.of(data);
     try {
       _idWriteChunk.call(_class, jvoid.type, [jSession, jData]);
     } finally {
@@ -129,14 +140,18 @@ class SafStreamJniIo {
     }
   }
 
-  static Uint8List readFileBytes(String uri, {required int start, required int count}) {
+  static Uint8List readFileBytes(
+    String uri, {
+    required int start,
+    required int count,
+  }) {
     final jUri = uri.toJString();
     try {
-      final jResult = _idReadFileBytes.call(
-        _class,
-        JByteArray.type,
-        [jUri, start, count],
-      );
+      final jResult = _idReadFileBytes.call(_class, JByteArray.type, [
+        jUri,
+        start,
+        count,
+      ]);
       try {
         return _toUint8List(jResult);
       } finally {
