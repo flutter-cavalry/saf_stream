@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'saf_stream_platform_interface.dart';
+import 'saf_stream_jni_io.dart';
 
 /// An implementation of [SafStreamPlatform] that uses method channels.
 class MethodChannelSafStream extends SafStreamPlatform {
@@ -17,19 +18,19 @@ class MethodChannelSafStream extends SafStreamPlatform {
     int? bufferSize,
     int? start,
   }) async {
-    final session = _nextSession();
-    final channelName = await methodChannel
-        .invokeMethod<String>('readFileStream', {
-          'fileUri': uri.toString(),
-          'session': session.toString(),
-          'bufferSize': bufferSize,
-          'start': start,
-        });
-    if (channelName == null) {
-      throw Exception('Unexpected empty channel name from `readFile`');
-    }
-    final stream = EventChannel(channelName);
-    return stream.receiveBroadcastStream().map((e) => e as Uint8List);
+    // `readFileStream` on the native side now only opens the stream and
+    // registers it under `session` (see SafStreamPlugin.kt) -- a single
+    // MethodChannel call. Every chunk after that is pulled directly via JNI
+    // in SafStreamJniIo.readStream, with no EventChannel and no per-chunk
+    // BinaryMessenger round trip.
+    final session = _nextSession().toString();
+    final effectiveBufferSize = bufferSize ?? (4 * 1024 * 1024);
+    await methodChannel.invokeMethod<String>('readFileStream', {
+      'fileUri': uri.toString(),
+      'session': session,
+      'start': start,
+    });
+    return SafStreamJniIo.readStream(session, bufferSize: effectiveBufferSize);
   }
 
   @override
@@ -43,15 +44,13 @@ class MethodChannelSafStream extends SafStreamPlatform {
         throw ArgumentError('`count` must be greater than 0');
       }
     }
-    final res = await methodChannel.invokeMethod<Uint8List>('readFileBytes', {
-      'fileUri': uri.toString(),
-      'start': start,
-      'count': count,
-    });
-    if (res == null) {
-      throw Exception('Unexpected empty response from `readFileBytes`');
-    }
-    return res;
+    // One-shot read, straight through JNI: skips the MethodChannel codec
+    // round trip entirely for what can be a very large byte array.
+    return SafStreamJniIo.readFileBytes(
+      uri.toString(),
+      start: start,
+      count: count ?? -1,
+    );
   }
 
   @override
@@ -178,18 +177,21 @@ class MethodChannelSafStream extends SafStreamPlatform {
 
   @override
   Future<void> writeChunk(String session, Uint8List data) async {
-    return await methodChannel.invokeMethod<void>('writeChunk', {
-      'session': session.toString(),
-      'data': data,
-    });
+    // Direct JNI call -- this is what used to be one `invokeMethod` per
+    // chunk. For a multi-MB file written in, say, 64KB chunks that's
+    // hundreds of MethodChannel round trips avoided.
+    SafStreamJniIo.writeChunk(session, data);
   }
 
   @override
   Future<void> endWriteStream(String session) async {
-    return await methodChannel.invokeMethod<void>('endWriteStream', {
-      'session': session.toString(),
-    });
+    SafStreamJniIo.endWrite(session);
   }
+
+  // `_customBufferSizes` remembers the bufferSize passed to
+  // startReadCustomFileStream, since readCustomFileStreamChunk no longer
+  // takes one per call (it just asks JNI for "the next chunk").
+  final _customBufferSizes = <String, int>{};
 
   @override
   Future<String> startReadCustomFileStream(
@@ -197,36 +199,32 @@ class MethodChannelSafStream extends SafStreamPlatform {
     int? bufferSize,
   }) async {
     final session = _nextSession().toString();
+    final effectiveBufferSize = bufferSize ?? (4 * 1024 * 1024);
+    // Setup-only MethodChannel call: opens the stream and registers it under
+    // `session`. Subsequent chunk reads go straight through JNI.
     await methodChannel.invokeMethod<String>('startReadCustomFileStream', {
       'fileUri': uri.toString(),
       'session': session,
-      'bufferSize': bufferSize,
     });
+    _customBufferSizes[session] = effectiveBufferSize;
     return session;
   }
 
   @override
   Future<Uint8List?> readCustomFileStreamChunk(String session) async {
-    return await methodChannel.invokeMethod<Uint8List>(
-      'readCustomFileStreamChunk',
-      {'session': session.toString()},
-    );
+    final bufferSize = _customBufferSizes[session] ?? (4 * 1024 * 1024);
+    return SafStreamJniIo.readCustomChunk(session, bufferSize);
   }
 
   @override
   Future<int> skipCustomFileStreamChunk(String session, int count) async {
-    final res = await methodChannel.invokeMethod<int>(
-      'skipCustomFileStreamChunk',
-      {'session': session.toString(), 'count': count},
-    );
-    return res ?? 0;
+    return SafStreamJniIo.skip(session, count);
   }
 
   @override
   Future<void> endReadCustomFileStream(String session) async {
-    await methodChannel.invokeMethod<void>('endReadCustomFileStream', {
-      'session': session.toString(),
-    });
+    _customBufferSizes.remove(session);
+    SafStreamJniIo.endRead(session);
   }
 
   int _nextSession() {
