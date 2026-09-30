@@ -1,3 +1,7 @@
+## 4.0.2
+
+- Call `InputStream.skipNBytes` if possible.
+
 ## 4.0.0
 
 - Significantly improve performance by adding JNI calls by @Neo-vortex.
