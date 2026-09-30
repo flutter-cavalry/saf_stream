@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'saf_stream_platform_interface.dart';
 import 'saf_stream_jni_io.dart';
+import 'saf_stream_platform_interface.dart';
 
 /// An implementation of [SafStreamPlatform] that uses method channels.
 class MethodChannelSafStream extends SafStreamPlatform {
@@ -18,6 +18,9 @@ class MethodChannelSafStream extends SafStreamPlatform {
     int? bufferSize,
     int? start,
   }) async {
+    if (start != null && start < 0) {
+      throw ArgumentError('`start` must be greater than or equal to 0');
+    }
     // `readFileStream` on the native side now only opens the stream and
     // registers it under `session` (see SafStreamPlugin.kt) -- a single
     // MethodChannel call. Every chunk after that is pulled directly via JNI
@@ -25,7 +28,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
     // BinaryMessenger round trip.
     final session = _nextSession().toString();
     final effectiveBufferSize = bufferSize ?? (4 * 1024 * 1024);
-    await methodChannel.invokeMethod<String>('readFileStream', {
+    await methodChannel.invokeMethod('readFileStream', {
       'fileUri': uri.toString(),
       'session': session,
       'start': start,
@@ -202,7 +205,7 @@ class MethodChannelSafStream extends SafStreamPlatform {
     final effectiveBufferSize = bufferSize ?? (4 * 1024 * 1024);
     // Setup-only MethodChannel call: opens the stream and registers it under
     // `session`. Subsequent chunk reads go straight through JNI.
-    await methodChannel.invokeMethod<String>('startReadCustomFileStream', {
+    await methodChannel.invokeMethod('startReadCustomFileStream', {
       'fileUri': uri.toString(),
       'session': session,
     });

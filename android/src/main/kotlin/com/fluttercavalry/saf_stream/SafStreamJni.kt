@@ -1,8 +1,10 @@
 package com.fluttercavalry.saf_stream
 
 import android.content.Context
+import android.os.Build
 import androidx.annotation.Keep
 import androidx.core.net.toUri
+import java.io.EOFException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.ConcurrentHashMap
@@ -51,6 +53,25 @@ object SafStreamJni {
         inputStreams[session] = stream
     }
 
+    fun skipToOffset(stream: InputStream, offset: Long) {
+        require(offset >= 0) { "Offset must be non-negative" }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            stream.skipNBytes(offset)
+            return
+        }
+
+        var remaining = offset
+        while (remaining > 0) {
+            val skipped = stream.skip(remaining)
+            if (skipped > 0) {
+                remaining -= skipped
+            } else {
+                if (stream.read() == -1) break
+                remaining--
+            }
+        }
+    }
+
     /**
      * Reads up to [length] bytes from the stream registered under
      * [session]. Returns an empty (zero-length) array at EOF. Called
@@ -89,8 +110,11 @@ object SafStreamJni {
     /** Closes and unregisters the input stream for [session]. */
     @JvmStatic
     fun closeInputStream(session: String) {
-        inputStreams.remove(session)?.close()
-        readBuffers.remove(session)
+        try {
+            inputStreams.remove(session)?.close()
+        } finally {
+            readBuffers.remove(session)
+        }
     }
 
     /**
@@ -109,7 +133,7 @@ object SafStreamJni {
                 ?: throw Exception("Failed to open input stream for $uriStr")
         stream.use {
             if (start > 0) {
-                it.skip(start)
+                skipToOffset(it, start)
             }
             return if (count > 0) {
                 val buffer = ByteArray(count)

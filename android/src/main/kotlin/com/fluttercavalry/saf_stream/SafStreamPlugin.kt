@@ -58,9 +58,7 @@ class SafStreamPlugin :
                         val inStream =
                             context.contentResolver.openInputStream(fileUriStr.toUri())
                                 ?: throw Exception("Stream creation failed")
-                        if (start != 0L) {
-                            inStream.skip(start)
-                        }
+                        SafStreamJni.skipToOffset(inStream, start)
                         SafStreamJni.registerInputStream(session, inStream)
                         launch(Dispatchers.Main) {
                             result.success(session)
@@ -78,14 +76,16 @@ class SafStreamPlugin :
                     try {
                         val fileUriStr = call.argument<String>("src")!!.toUri()
                         val dest = call.argument<String>("dest")!!
-                        val inputStream = context.contentResolver.openInputStream(fileUriStr)
-                        inputStream?.use { input ->
+                        val inputStream =
+                            context.contentResolver.openInputStream(fileUriStr)
+                                ?: throw Exception("Stream creation failed")
+                        inputStream.use { input ->
                             val file = File(dest)
                             file.outputStream().use { output ->
                                 input.buffered().copyTo(output)
                             }
                         }
-                        result.success(null)
+                        launch(Dispatchers.Main) { result.success(null) }
                     } catch (err: Exception) {
                         launch(Dispatchers.Main) {
                             result.error("PluginError", err.message, null)
@@ -164,10 +164,10 @@ class SafStreamPlugin :
                         val treeUriStr = call.argument<String>("treeUri")
                         val fileName = call.argument<String>("fileName")
                         val fileUri = call.argument<String>("fileUri")
-                        val mime = call.argument<String>("mime")?:""
+                        val mime = call.argument<String>("mime") ?: ""
                         val data = call.argument<ByteArray>("data")!!
-                        val overwrite = call.argument<Boolean>("overwrite")?:false
-                        val append = call.argument<Boolean>("append")?:false
+                        val overwrite = call.argument<Boolean>("overwrite") ?: false
+                        val append = call.argument<Boolean>("append") ?: false
 
                         val (newFile, outStream) = createOutStreamFromFileOrDir(fileUri, treeUriStr, fileName, mime, overwrite, append)
 
@@ -193,17 +193,16 @@ class SafStreamPlugin :
                         val treeUriStr = call.argument<String>("treeUri")
                         val fileName = call.argument<String>("fileName")
                         val fileUri = call.argument<String>("fileUri")
-                        val mime = call.argument<String>("mime")?:""
+                        val mime = call.argument<String>("mime") ?: ""
                         val session = call.argument<String>("session")!!
-                        val overwrite = call.argument<Boolean>("overwrite")?:false
-                        val append = call.argument<Boolean>("append")?:false
+                        val overwrite = call.argument<Boolean>("overwrite") ?: false
+                        val append = call.argument<Boolean>("append") ?: false
 
                         val (newFile, outStream) = createOutStreamFromFileOrDir(fileUri, treeUriStr, fileName, mime, overwrite, append)
 
                         val map = HashMap<String, Any?>()
                         map["uri"] = newFile.uri.toString()
                         map["fileName"] = newFile.name
-
                         SafStreamJni.registerOutputStream(session, outStream)
                         launch(Dispatchers.Main) {
                             result.success(map)
@@ -390,5 +389,3 @@ class SafStreamPlugin :
             throw Exception("Either fileUri or treeUri and fileName must be provided (createOutStreamFromFileOrDir)")
         }
 }
-
-
