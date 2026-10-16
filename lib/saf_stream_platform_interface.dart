@@ -6,7 +6,7 @@ import 'saf_stream_method_channel.dart';
 
 /// Describes the result of a write operation.
 class SafNewFile {
-  /// The Uri of the destination file.
+  /// The URI of the destination file.
   final Uri uri;
 
   /// The name of the destination file.
@@ -31,10 +31,10 @@ class SafNewFile {
 
 /// Contains information about an SAF out stream.
 class SafWriteStreamInfo {
-  /// A unique string to identity this stream.
+  /// A unique identifier for this stream.
   final String session;
 
-  /// The information of the destination file.
+  /// Information about the destination file.
   final SafNewFile fileResult;
 
   SafWriteStreamInfo(this.session, this.fileResult);

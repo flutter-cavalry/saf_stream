@@ -73,13 +73,13 @@ object SafStreamJni {
     }
 
     /**
-     * Reads up to [length] bytes from the stream registered under
-     * [session]. Returns an empty (zero-length) array at EOF. Called
-     * directly from Dart via JNI, in a loop -- this is the hot path.
+    * Reads up to [length] bytes from the stream registered under
+    * [session]. Returns an empty array at EOF. Dart calls this method
+    * directly through JNI for each chunk.
      *
-     * Reuses a per-session buffer instead of allocating a fresh `length`
-     * -byte array on every call: at a 64 KB chunk size against a 100 MB
-     * file that's ~1600 allocations (and matching GC churn) removed.
+    * Reuses a per-session buffer instead of allocating a new array for
+    * every call. At 64 KB per chunk, reading a 100 MB file this way avoids
+    * roughly 1,600 allocations and the associated garbage-collection work.
      */
     @JvmStatic
     fun readChunk(
@@ -118,9 +118,9 @@ object SafStreamJni {
     }
 
     /**
-     * One-shot read (backs `readFileBytes`). Not chunked, so a plain JNI
-     * call (no session bookkeeping) is enough; still skips the
-     * MethodChannel codec round trip for what can be a very large payload.
+    * Performs the one-shot read used by `readFileBytes`. No session is
+    * needed because the read is not chunked. Calling this through JNI also
+    * avoids the MethodChannel codec for potentially large payloads.
      */
     @JvmStatic
     fun readFileBytes(
@@ -157,9 +157,9 @@ object SafStreamJni {
     }
 
     /**
-     * Writes [data] to the stream registered under [session]. Called
-     * directly from Dart via JNI, once per chunk -- this is the hot path
-     * that used to be a `writeChunk` MethodChannel call per chunk.
+    * Writes [data] to the stream registered under [session]. Dart calls
+    * this directly through JNI for each chunk, avoiding a MethodChannel
+    * call per chunk.
      */
     @JvmStatic
     fun writeChunk(

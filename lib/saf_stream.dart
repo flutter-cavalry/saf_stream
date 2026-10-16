@@ -3,10 +3,10 @@ import 'dart:typed_data';
 import 'saf_stream_platform_interface.dart';
 
 class SafStream {
-  /// Reads the contents of a file from the given [uri] and returns a stream of bytes.
+  /// Returns a stream of bytes read from the file identified by [uri].
   ///
-  /// If [bufferSize] is provided, the stream will read data in chunks of [bufferSize] bytes.
-  /// If [start] is provided, the stream will start reading from the given position.
+  /// If provided, [bufferSize] sets the number of bytes read per chunk, and
+  /// [start] sets the byte offset at which reading begins.
   Future<Stream<Uint8List>> readFileStream(
     String uri, {
     int? bufferSize,
@@ -19,10 +19,11 @@ class SafStream {
     );
   }
 
-  /// Reads the contents of a file from the given [uri]. Unlike [readFileStream],
-  /// this method reads the entire file at once and returns a [Uint8List].
+  /// Reads the file identified by [uri] and returns its contents as a [Uint8List].
+  /// Unlike [readFileStream], this method reads the entire file at once.
   ///
-  /// If [start] and [count] are provided, reads [count] bytes starting from [start].
+  /// If [start] and [count] are provided, reads up to [count] bytes starting
+  /// at byte offset [start].
   Future<Uint8List> readFileBytes(String uri, {int? start, int? count}) async {
     return SafStreamPlatform.instance.readFileBytes(
       uri,
@@ -31,10 +32,11 @@ class SafStream {
     );
   }
 
-  /// Reads the contents of a file from the given [uri]. Unlike [readFileStream],
-  /// this method reads the entire file at once and returns a [Uint8List].
+  /// Reads the file identified by [uri] and returns its contents as a [Uint8List].
+  /// Unlike [readFileStream], this method reads the entire file at once.
   ///
-  /// If [start] and [count] are provided, reads [count] bytes starting from [start].
+  /// If [start] and [count] are provided, reads up to [count] bytes starting
+  /// at byte offset [start].
   @Deprecated(
     'Use [readFileBytes] instead. It is the same method with a different name. The [readFileSync] is confusing because it is not synchronous.',
   )
@@ -51,15 +53,15 @@ class SafStream {
     return SafStreamPlatform.instance.copyToLocalFile(srcUri, destPath);
   }
 
-  /// Copies the contents of a local file [srcPath] and creates a new file
-  /// from the given [treeUri], [fileName] and [mime].
+  /// Copies the local file at [srcPath] to a new file in the SAF directory
+  /// identified by [treeUri], using [fileName] and [mime].
   ///
-  /// Returns a [SafNewFile], which contains the Uri and file name of newly created file.
+  /// Returns a [SafNewFile] containing the URI and name of the created file.
   ///
   /// If [overwrite] is true, the file will be overwritten if it already exists.
-  /// If [overwrite] is false and a file with the same name already exists, a new name
-  /// will be generated and returned in the resulting [SafNewFile].
-  /// If [append] is true, the data will be appended to the file if it already exists.
+  /// If [overwrite] is false and a file with the same name already exists, a
+  /// new name is generated and returned in the [SafNewFile].
+  /// If [append] is true, the data is appended to the file if it already exists.
   Future<SafNewFile> pasteLocalFile(
     String srcPath,
     String treeUri,
@@ -78,14 +80,15 @@ class SafStream {
     );
   }
 
-  /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
-  /// Note that SAF may change the file name if a file with the same name already exists. The resulting
-  /// [SafNewFile] contains the actual file name and Uri.
+  /// Writes [data] to a file in the SAF directory identified by [treeUri],
+  /// using [fileName] and [mime]. SAF may change the name if a file with the
+  /// requested name already exists; the returned [SafNewFile] contains the
+  /// actual name and URI.
   ///
   /// If [overwrite] is true, the file will be overwritten if it already exists.
-  /// If [overwrite] is false and a file with the same name already exists, a new name
-  /// will be generated and returned in the resulting [SafNewFile].
-  /// If [append] is true, the data will be appended to the file if it already exists.
+  /// If [overwrite] is false and a file with the same name already exists, a
+  /// new name is generated and returned in the [SafNewFile].
+  /// If [append] is true, [data] is appended to the file if it already exists.
   Future<SafNewFile> writeFileBytes(
     String treeUri,
     String fileName,
@@ -104,11 +107,9 @@ class SafStream {
     );
   }
 
-  /// Writes the given [data] to a file identified by the given [fileUri].
-  /// Note that SAF may change the file name if a file with the same name already exists. The resulting
-  /// [SafNewFile] contains the actual file name and Uri.
+  /// Writes [data] to the file identified by [fileUri].
   ///
-  /// If [append] is true, the data will be appended to the file if it already exists.
+  /// If [append] is true, [data] is appended to the file.
   Future<SafNewFile> writeFileUriBytes(
     String fileUri,
     Uint8List data, {
@@ -121,14 +122,15 @@ class SafStream {
     );
   }
 
-  /// Writes the given [data] to a file identified by the given [treeUri], [fileName] and [mime].
+  /// Writes [data] to a file in the SAF directory identified by [treeUri],
+  /// using [fileName] and [mime].
   ///
-  /// Returns a [SafNewFile], which contains the Uri and file name of newly created file.
+  /// Returns a [SafNewFile] containing the URI and name of the created file.
   ///
   /// If [overwrite] is true, the file will be overwritten if it already exists.
-  /// If [overwrite] is false and a file with the same name already exists, a new name
-  /// will be generated and returned in the resulting [SafNewFile].
-  /// If [append] is true, the data will be appended to the file if it already exists.
+  /// If [overwrite] is false and a file with the same name already exists, a
+  /// new name is generated and returned in the [SafNewFile].
+  /// If [append] is true, [data] is appended to the file if it already exists.
   @Deprecated(
     'Use [writeFileBytes] instead. It is the same method with a different name. The [writeFileSync] is confusing because it is not synchronous.',
   )
@@ -150,17 +152,18 @@ class SafStream {
     );
   }
 
-  /// Creates a file stream for writing data to a file identified by the given [treeUri], [fileName] and [mime].
-  /// Note that SAF may change the file name if a file with the same name already exists. The resulting
-  /// [SafNewFile] contains the actual file name and Uri.
+  /// Opens a file stream for writing to a file in the SAF directory identified
+  /// by [treeUri], using [fileName] and [mime]. SAF may change the name if a
+  /// file with the requested name already exists; the returned [SafNewFile]
+  /// contains the actual name and URI.
   ///
-  /// To write data to the stream, call [writeChunk] with the [session] from [SafWriteStreamInfo]
-  /// Call [endWriteStream] to close the the stream.
+  /// To write data, call [writeChunk] with the [session] from the returned
+  /// [SafWriteStreamInfo]. Call [endWriteStream] to close the stream.
   ///
   /// If [overwrite] is true, the file will be overwritten if it already exists.
-  /// If [overwrite] is false and a file with the same name already exists, a new name
-  /// will be generated and returned in the resulting [SafWriteStreamInfo].
-  /// If [append] is true, the data will be appended to the file if it already exists.
+  /// If [overwrite] is false and a file with the same name already exists, a
+  /// new name is generated and returned in [SafWriteStreamInfo].
+  /// If [append] is true, data is appended to the file if it already exists.
   Future<SafWriteStreamInfo> startWriteStream(
     String treeUri,
     String fileName,
@@ -177,12 +180,12 @@ class SafStream {
     );
   }
 
-  /// Creates a file stream for writing data to a file identified by the given [fileUri].
+  /// Opens a file stream for writing to the file identified by [fileUri].
   ///
-  /// To write data to the stream, call [writeChunk] with the [session] from [SafWriteStreamInfo]
-  /// Call [endWriteStream] to close the the stream.
+  /// To write data, call [writeChunk] with the [session] from the returned
+  /// [SafWriteStreamInfo]. Call [endWriteStream] to close the stream.
   ///
-  /// If [append] is true, the data will be appended to the file if it already exists.
+  /// If [append] is true, data is appended to the file.
   Future<SafWriteStreamInfo> startWriteFileUriStream(
     String fileUri, {
     bool? append,
@@ -193,17 +196,18 @@ class SafStream {
     );
   }
 
-  /// Writes the given [data] to an out stream identified by the given [session].
+  /// Writes [data] to the output stream identified by [session].
   Future<void> writeChunk(String session, Uint8List data) async {
     return SafStreamPlatform.instance.writeChunk(session, data);
   }
 
-  /// Closes an out stream identified by the given [session].
+  /// Closes the output stream identified by [session].
   Future<void> endWriteStream(String session) async {
     return SafStreamPlatform.instance.endWriteStream(session);
   }
 
-  /// Like [readFileStream], but returns a session where you can control the reading process.
+  /// Opens a file stream like [readFileStream] and returns a session that lets
+  /// you control the reading process.
   Future<String> startReadCustomFileStream(
     String uri, {
     int? bufferSize,
@@ -214,17 +218,17 @@ class SafStream {
     );
   }
 
-  /// Reads a chunk of bytes from a custom file stream identified by the given [session].
+  /// Reads the next chunk from the custom file stream identified by [session].
   Future<Uint8List?> readCustomFileStreamChunk(String session) async {
     return SafStreamPlatform.instance.readCustomFileStreamChunk(session);
   }
 
-  /// Skips [count] bytes from a custom file stream identified by the given [session].
+  /// Skips up to [count] bytes in the custom file stream identified by [session].
   Future<int> skipCustomFileStreamChunk(String session, int count) async {
     return SafStreamPlatform.instance.skipCustomFileStreamChunk(session, count);
   }
 
-  /// Closes a custom file stream identified by the given [session].
+  /// Closes the custom file stream identified by [session].
   Future<void> endReadCustomFileStream(String session) async {
     return SafStreamPlatform.instance.endReadCustomFileStream(session);
   }

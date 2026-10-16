@@ -19,10 +19,10 @@ import java.io.OutputStream
 class SafStreamPlugin :
     FlutterPlugin,
     MethodCallHandler {
-    // The MethodChannel that will the communication between Flutter and native Android
+    // The MethodChannel used for communication between Flutter and Android.
     //
-    // This local reference serves to register the plugin with the Flutter Engine and unregister it
-    // when the Flutter Engine is detached from the Activity
+    // This reference registers the plugin with the Flutter engine and is
+    // cleared when the engine detaches from the activity.
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
     private var pluginBinding: FlutterPlugin.FlutterPluginBinding? = null
@@ -122,7 +122,7 @@ class SafStreamPlugin :
             "pasteLocalFile" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        // Arguments are enforced on dart side.
+                        // Argument validation is handled on the Dart side.
                         val treeUriStr = call.argument<String>("treeUri")!!
                         val fileName = call.argument<String>("fileName")!!
                         val mime = call.argument<String>("mime")!!
