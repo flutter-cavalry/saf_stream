@@ -1,3 +1,7 @@
+## 4.0.3
+
+- Update documentation and comments.
+
 ## 4.0.2
 
 - Call `InputStream.skipNBytes` if possible.
